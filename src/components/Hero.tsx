@@ -15,7 +15,7 @@ const slides = [
     title: "LUXURY DEFINED",
     subtitle: "BY NATURE",
     description: "Exclusive collection of imported stones",
-    navigation: "/products/granite/",
+    navigation: "/products",
   },
   {
     imageUrl: "/banner/banner3.webp",
@@ -103,7 +103,7 @@ const Hero = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.8 }}
             onClick={() => {
-              navition(slides[1].navigation);
+              navition('/products');
             }}
             className="bg-black hover:bg-white text-white hover:text-black border-2 border-black hover:border-white px-6 md:px-8 py-3 rounded-lg transition-all duration-300 inline-flex items-center group font-semibold"
           >

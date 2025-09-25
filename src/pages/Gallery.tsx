@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
 // Dynamically import all images from public/gallery (kept in public)
 const galleryFiles = import.meta.glob('/public/gallery/**/*.{webp,jpg,jpeg,png}', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 
@@ -55,6 +53,7 @@ const Gallery = memo(() => {
   const [canNext, setCanNext] = useState(true);
   const [visibleCount, setVisibleCount] = useState(16);
   const [sentinelRef, setSentinelRef] = useState<HTMLDivElement | null>(null);
+  const [SwiperComponents, setSwiperComponents] = useState<{ Swiper: any; SwiperSlide: any } | null>(null);
 
   const relatedItems = useMemo(() => {
     if (!currentItem) return [] as GalleryItem[];
@@ -106,6 +105,16 @@ const Gallery = memo(() => {
     if (isModalOpen) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isModalOpen, closeModal]);
+
+  // Lazy-load Swiper only when modal opens
+  useEffect(() => {
+    if (!isModalOpen || SwiperComponents) return;
+    (async () => {
+      await import("swiper/css");
+      const mod = await import("swiper/react");
+      setSwiperComponents({ Swiper: mod.Swiper, SwiperSlide: mod.SwiperSlide });
+    })();
+  }, [isModalOpen, SwiperComponents]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -298,7 +307,8 @@ const Gallery = memo(() => {
                 {/* Related slider */}
                 <div className="p-2 md:p-3 border-t-2 border-black bg-white/80 backdrop-blur-md shrink-0 relative">
                   <div className="mb-2 md:mb-3 text-sm font-semibold text-black">More from {currentItem.category}</div>
-                  <Swiper
+                  {SwiperComponents ? (
+                  <SwiperComponents.Swiper
                     spaceBetween={12}
                     slidesPerView={2.2}
                     breakpoints={{
@@ -319,7 +329,7 @@ const Gallery = memo(() => {
                     onReachEnd={() => setCanNext(false)}
                   >
                     {relatedItems.map((rel) => (
-                      <SwiperSlide key={rel.id}>
+                      <SwiperComponents.SwiperSlide key={rel.id}>
                         <button
                           onClick={() => setCurrentItem(rel)}
                           className="block w-full overflow-hidden rounded-xl border-2 border-black bg-white hover:opacity-90 transition"
@@ -332,9 +342,12 @@ const Gallery = memo(() => {
                             />
                           </div>
                         </button>
-                      </SwiperSlide>
+                      </SwiperComponents.SwiperSlide>
                     ))}
-                  </Swiper>
+                  </SwiperComponents.Swiper>
+                  ) : (
+                    <div className="text-sm text-gray-600">Loading slider...</div>
+                  )}
                   {/* Side slider buttons */}
                   {canPrev && (
                     <button

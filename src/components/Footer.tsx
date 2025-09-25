@@ -35,13 +35,19 @@ const FooterVariant1: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-black">Services</h4>
+            <h4 className="text-lg font-semibold mb-6 text-black">Products</h4>
             <ul className="space-y-3">
-              {['Custom Countertops', 'Flooring Installation', 'Wall Cladding', 'Restoration', 'Design Consultation'].map((service) => (
-                <li key={service}>
-                  <a href="#" className="text-gray-600 hover:text-amber-500 transition-colors duration-200 flex items-center group">
+              {[
+                { label: 'All Products', href: '/products' },
+                { label: 'Marble', href: '/products/marble' },
+                { label: 'Granite', href: '/products/granite' },
+                { label: 'Onyx', href: '/products/onyx' },
+                { label: 'Sandstone', href: '/products/sandstone' }
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="text-gray-600 hover:text-amber-500 transition-colors duration-200 flex items-center group">
                     <span className="w-2 h-2 bg-amber-400 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></span>
-                    {service}
+                    {link.label}
                   </a>
                 </li>
               ))}
@@ -49,13 +55,19 @@ const FooterVariant1: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-black">Materials</h4>
+            <h4 className="text-lg font-semibold mb-6 text-black">Pages</h4>
             <ul className="space-y-3">
-              {['Marble', 'Granite', 'Quartz', 'Travertine', 'Limestone'].map((material) => (
-                <li key={material}>
-                  <a href="#" className="text-gray-600 hover:text-amber-500 transition-colors duration-200 flex items-center group">
+              {[
+                { label: 'Home', href: '/' },
+                { label: 'About', href: '/about' },
+                { label: 'Products', href: '/products' },
+                { label: 'Gallery', href: '/gallery' },
+                { label: 'Contact', href: '/contact' }
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="text-gray-600 hover:text-amber-500 transition-colors duration-200 flex items-center group">
                     <span className="w-2 h-2 bg-amber-400 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></span>
-                    {material}
+                    {link.label}
                   </a>
                 </li>
               ))}

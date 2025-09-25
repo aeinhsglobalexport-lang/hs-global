@@ -52,7 +52,7 @@ const MarbleEngravingSection1: React.FC = () => {
     };
 
     const filterAvailableImages = async () => {
-      const available = [];
+      const available = [] as typeof images;
       for (const image of images) {
         const exists = await checkImageExists(image.src);
         if (exists) {
@@ -145,12 +145,15 @@ const MarbleEngravingSection1: React.FC = () => {
         return;
       }
       const container = scrollContainerRef.current;
-      const singleSetWidth = (container.scrollWidth / 3); // Since we have 3 sets
-      const maxScroll = singleSetWidth;
+      const singleSetWidth = (container.scrollWidth / 3); // since we have 3 sets
+      const maxScroll = singleSetWidth * 2; // from start of middle set to end of last set
       
       if (container.scrollLeft >= maxScroll - 2) {
-        // Reset to beginning of first set for seamless loop
-        container.scrollTo({ left: 0, behavior: 'auto' });
+        // jump back to the middle set start for seamless loop
+        container.scrollTo({ left: singleSetWidth, behavior: 'auto' });
+      } else if (container.scrollLeft <= 2) {
+        // if somehow at the very start, jump to middle set
+        container.scrollTo({ left: singleSetWidth, behavior: 'auto' });
       } else {
         container.scrollBy({ left: 2.5, behavior: 'auto' });
       }
@@ -161,6 +164,19 @@ const MarbleEngravingSection1: React.FC = () => {
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isAutoScrolling]);
+
+  // Initialize position to middle set for seamless bi-directional looping
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const init = () => {
+      const singleSetWidth = container.scrollWidth / 3;
+      container.scrollLeft = singleSetWidth;
+    };
+    // wait a tick for layout to settle
+    const id = window.setTimeout(init, 0);
+    return () => window.clearTimeout(id);
+  }, [galleryItems.length]);
 
   const temporarilyPauseAutoScroll = () => {
     setIsAutoScrolling(false);
@@ -201,7 +217,7 @@ const MarbleEngravingSection1: React.FC = () => {
             className="group relative bg-black text-white hover:bg-white hover:text-black border-2 border-black hover:border-white px-8 py-4 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6 fill-green-500">
-              <path d="M20.52 3.48A11.94 11.94 0 0 0 12.06 0C5.46.03.1 5.38.12 11.98c0 2.1.55 4.1 1.52 5.86L0 24l6.3-1.6a12.02 12.02 0 0 0 5.76 1.46h.03c6.6 0 11.97-5.36 12-11.96a11.94 11.94 0  0 0-3.57-8.42zM12.09 21.3h-.02a9.9 9.9 0 0 1-5.04-1.38l-.36-.2-3.74.95.99-3.64-.24-.38a9.36 9.36 0  0 1-1.45-4.96c-.02-5.16 4.18-9.38 9.34-9.4 2.5 0 4.86.98 6.64 2.77a9.32 9.32 0  0 1 2.75 6.65c-.02 5.16-4.22 9.39-9.37 9.39zm5.35-7.26c-.29-.15-1.72-.84-1.99-.94-.27-.1-.46-.15-.66.15-.2.29-.76.94-.92 1.12-.17.19-.34.22-.62.08-.29-.15-1.2-.44-2.28-1.41-1.68-1.5-1.92-2.33-2.14-2.62-.23-.29-.02-.45.13-.6.13-.13.3-.33.45-.5.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.66-1.55-.9-2.12-.24-.57-.48-.49-.66-.49-.17 0-.37-.02-.57-.02-.2 0-.52.08-.8.37-.27.29-1.03 1.01-1.03 2.47 0 1.45 1.06 2.86 1.21 3.06.15.2 2.08 3.16 5.04 4.43.71.31 1.26.48 1.69.62.71.22 1.34.2 1.85.12.57-.09 1.73-.7 1.98-1.39.25-.69.25-1.27.17-1.39-.07-.12-.27-.19-.55-.33z"/>
+              <path d="M20.52 3.48A11.94 11.94 0 0 0 12.06 0C5.46.03.1 5.38.12 11.98c0 2.1.55 4.1 1.52 5.86L0 24l6.3-1.6a12.02 12.02 0 0 0 5.76 1.46h.03c6.6 0 11.97-5.36 12-11.96a11.94 11.94 0  0 0-3.57-8.42zM12.09 21.3h-.02a9.9 9.9 0  0 1-5.04-1.38l-.36-.2-3.74.95.99-3.64-.24-.38a9.36 9.36 0  0 1-1.45-4.96c-.02-5.16 4.18-9.38 9.34-9.4 2.5 0 4.86.98 6.64 2.77a9.32 9.32 0  0 1 2.75 6.65c-.02 5.16-4.22 9.39-9.37 9.39zm5.35-7.26c-.29-.15-1.72-.84-1.99-.94-.27-.1-.46-.15-.66.15-.2.29-.76.94-.92 1.12-.17.19-.34.22-.62.08-.29-.15-1.2-.44-2.28-1.41-1.68-1.5-1.92-2.33-2.14-2.62-.23-.29-.02-.45.13-.6.13-.13.3-.33.45-.5.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.66-1.55-.9-2.12-.24-.57-.48-.49-.66-.49-.17 0-.37-.02-.57-.02-.2 0-.52.08-.8.37-.27.29-1.03 1.01-1.03 2.47 0 1.45 1.06 2.86 1.21 3.06.15.2 2.08 3.16 5.04 4.43.71.31 1.26.48 1.69.62.71.22 1.34.2 1.85.12.57-.09 1.73-.7 1.98-1.39.25-.69.25-1.27.17-1.39-.07-.12-.27-.19-.55-.33z"/>
             </svg>
             <span>Want to Know More</span>
             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -237,6 +253,17 @@ const MarbleEngravingSection1: React.FC = () => {
 
           <div 
             ref={scrollContainerRef}
+            onScroll={() => {
+              const container = scrollContainerRef.current;
+              if (!container) return;
+              const singleSetWidth = container.scrollWidth / 3;
+              const endOfLast = singleSetWidth * 2;
+              if (container.scrollLeft <= 2) {
+                container.scrollTo({ left: singleSetWidth, behavior: 'auto' });
+              } else if (container.scrollLeft >= endOfLast - 2) {
+                container.scrollTo({ left: singleSetWidth, behavior: 'auto' });
+              }
+            }}
             onWheel={temporarilyPauseAutoScroll}
             onTouchStart={temporarilyPauseAutoScroll}
             onMouseEnter={() => setIsAutoScrolling(false)}

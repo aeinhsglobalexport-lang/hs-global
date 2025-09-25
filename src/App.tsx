@@ -13,12 +13,11 @@ const Gallery = React.lazy(() => import("./pages/Gallery"));
 const GalleryDetails = React.lazy(() => import("./pages/GalleryDetails"));
 const Contact = React.lazy(() => import("./pages/Contact"));
 const Services = React.lazy(() => import("./pages/Services"));
-import emailjs from "@emailjs/browser";
 import Test from "./pages/Test";
 import ArtDetails from "./pages/ArtDetails";
 import ArtDetailsInfo from "./pages/ArtDetailsInfo";
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [showInitialForm, setShowInitialForm] = useState(false);
   useEffect(() => {
     const hasVisited = localStorage.getItem("hasVisited");
@@ -28,14 +27,7 @@ function App() {
     }
 
     if (!hasVisited) {
-      // First visit - show loading screen for 3 seconds
-      setTimeout(() => {
-        setIsLoading(false);
-        localStorage.setItem("hasVisited", "true");
-      }, 3000);
-    } else {
-      // Returning visitor - skip loading screen
-      setIsLoading(false);
+      localStorage.setItem("hasVisited", "true");
     }
   }, []);
   const handleFormSubmit = (data: {
@@ -50,18 +42,20 @@ function App() {
       phone: data.phone,
       requirements: data.requirements,
     };
-    emailjs
-      .send("service_cmjk7to", "template_sd79a3m", templateParams, {
-        publicKey: "6uDKMKXeL97orQgEW",
-      })
-      .then(
-        function (response) {
-          console.log("SUCCESS!", response.status, response.text);
-        },
-        function (err) {
-          console.log("FAILED...", err);
-        }
-      );
+    import("@emailjs/browser").then(({ default: emailjs }) =>
+      emailjs
+        .send("service_cmjk7to", "template_sd79a3m", templateParams, {
+          publicKey: "6uDKMKXeL97orQgEW",
+        })
+        .then(
+          function (response) {
+            console.log("SUCCESS!", response.status, response.text);
+          },
+          function (err) {
+            console.log("FAILED...", err);
+          }
+        )
+    );
     console.log("Form submitted:", data);
     localStorage.setItem("hasSubmittedForm", "true");
     localStorage.setItem("userDetails", JSON.stringify(data));
