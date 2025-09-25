@@ -26,6 +26,7 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [lastTriedOtp, setLastTriedOtp] = useState('');
   const [autoSubmitEnabled, setAutoSubmitEnabled] = useState(true);
+  const [otpToken, setOtpToken] = useState('');
 
   const flagFromCode = (cc: string) =>
     cc
@@ -102,6 +103,7 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
       });
       const data = await resp.json();
       if (!resp.ok || !data.ok) throw new Error(data.error || 'Failed to send OTP');
+      setOtpToken(String(data.otpToken || ''));
       setStep('otp');
     } catch (err: any) {
       setError(err?.message || 'Failed to send OTP');
@@ -124,7 +126,7 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
       const resp = await fetch('/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: full, code: otp })
+        body: JSON.stringify({ phone: full, code: otp, otpToken })
       });
       const data = await resp.json();
       if (!resp.ok || !data.ok) throw new Error(data.error || 'Invalid code');

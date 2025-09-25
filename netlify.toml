@@ -4,6 +4,18 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/otp/send"
+  to = "/.netlify/functions/send-otp"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/otp/verify"
+  to = "/.netlify/functions/verify-otp"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

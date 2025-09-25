@@ -13,15 +13,18 @@ const ensureTwilio = () => {
 };
 
 const handler: Handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+  }
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false, error: 'Method Not Allowed' }) };
   }
 
   try {
     const body = JSON.parse(event.body || '{}');
     const phone = String(body.phone || '').trim();
     if (!/^\+?\d{10,15}$/.test(phone)) {
-      return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Invalid phone' }) };
+      return { statusCode: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false, error: 'Invalid phone' }) };
     }
 
     // Generate 6-digit OTP
@@ -48,11 +51,11 @@ const handler: Handler = async (event) => {
     // For simplicity, return otpToken as the code itself; in production, use HMAC or store in KV/DB
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ ok: true, otpToken: otp }),
     };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Server error' }) };
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false, error: 'Server error' }) };
   }
 };
 
