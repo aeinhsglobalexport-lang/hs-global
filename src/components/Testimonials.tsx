@@ -34,9 +34,21 @@ const Testimonials = () => {
   });
 
   return (
-    <section className="py-20 bg-secondary" id="testimonials">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-primary text-center mb-12">
+    <section className="relative py-20 overflow-hidden" id="testimonials">
+      {/* Fixed Background Image - Only in this section */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/banner/banner3.webp')`,
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4">
+        <h2 className="text-4xl font-bold text-white text-center mb-12">
           What Our Clients Say
         </h2>
         <div
@@ -48,7 +60,7 @@ const Testimonials = () => {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-white rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow"
+              className="bg-white/90 backdrop-blur-sm rounded-lg p-8 shadow-lg hover:shadow-xl transition-shadow"
             >
               <div className="flex items-center mb-6">
                 <img

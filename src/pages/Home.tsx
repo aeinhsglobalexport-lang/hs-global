@@ -1,12 +1,11 @@
 import { Helmet } from "react-helmet-async";
 import Hero from "../components/Hero";
-import Features from "../components/Features";
-import ProcessSection from "../components/ProcessSection";
-import Products from "../components/Products";
-import Services from "../components/Services";
-import Gallery from "../components/Gallery";
-import ImageShowcase from "../components/ImageShowcase";
-import Testimonials from "../components/Testimonials";
+import TestimonialVariant2 from "../components/TestimonialVariant2";
+import CategoriesSlider from "../components/CategoriesSlider";
+import AboutCompany from "../components/AboutCompany";
+import ChooseStone from "../components/ChooseStone";
+import TrustBadges from "../components/TrustBadges";
+import MarbleEngravingSection1 from "../components/MarbleEngravingSection1";
 
 const Home = () => {
   return (
@@ -47,14 +46,27 @@ const Home = () => {
           content="https://www.hs-globals.com/assets/images/granite-marble-collection.jpg"
         />
       </Helmet>
-      <Hero />
-      <Features />
-      <ProcessSection />
-      <Products />
-      <Services />
-      <Gallery />
-      <ImageShowcase />
-      <Testimonials />
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '1000px' }}>
+        <Hero />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '1200px' }}>
+        <AboutCompany />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+        <CategoriesSlider />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '600px' }}>
+        <TrustBadges />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+        <MarbleEngravingSection1 />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '1000px' }}>
+        <ChooseStone />
+      </section>
+      <section style={{ contentVisibility: 'auto', containIntrinsicSize: '800px' }}>
+        <TestimonialVariant2 />
+      </section>
     </>
   );
 };

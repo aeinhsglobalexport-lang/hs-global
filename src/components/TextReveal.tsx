@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import SplitType from 'split-type';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+gsap.registerPlugin(ScrollTrigger);
 
 interface TextRevealProps {
   children: string;

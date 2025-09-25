@@ -1,458 +1,367 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
-import { Search, ZoomIn } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+// Dynamically import all images from public/gallery (kept in public)
+const galleryFiles = import.meta.glob('/public/gallery/**/*.{webp,jpg,jpeg,png}', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 
-const galleryItems = [
-  {
-    id: 2,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen1.jpg",
-  },
-  {
-    id: 3,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen2.jpg",
-  },
-  {
-    id: 4,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen3.jpg",
-  },
-  {
-    id: 5,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen4.jpg",
-  },
-  {
-    id: 6,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "kitchen/kitchen5.jpg",
-  },
-  {
-    id: 7,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen6.jpg",
-  },
-  {
-    id: 8,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen7.jpg",
-  },
-  {
-    id: 9,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen8.jpg",
-  },
-  {
-    id: 10,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen9.jpg",
-  },
-  {
-    id: 11,
-    title: "Modern Kitchen Countertop",
-    category: "kitchen",
-    image: "/kitchen/kitchen10.jpg",
-  },
-  {
-    id: 12,
-    title: "Art 12",
-    category: "art",
-    image: "/art/art1.jpg",
-  },
-  {
-    id: 13,
-    title: "Art 13",
-    category: "art",
-    image: "/art/art2.jpg",
-  },
-  {
-    id: 14,
-    title: "Art 14",
-    category: "art",
-    image: "/art/art3.jpg",
-  },
-  {
-    id: 15,
-    title: "Art 15",
-    category: "art",
-    image: "/art/art4.jpg",
-  },
-  {
-    id: 16,
-    title: "Art 16",
-    category: "art",
-    image: "/art/art5.jpg",
-  },
-  {
-    id: 17,
-    title: "Art 17",
-    category: "art",
-    image: "/art/art6.jpg",
-  },
-  {
-    id: 18,
-    title: "Art 18",
-    category: "art",
-    image: "/art/art7.jpg",
-  },
-  {
-    id: 19,
-    title: "Art 19",
-    category: "art",
-    image: "/art/art8.jpg",
-  },
-  {
-    id: 20,
-    title: "Art 20",
-    category: "art",
-    image: "/art/art9.jpg",
-  },
-  {
-    id: 21,
-    title: "Art 21",
-    category: "art",
-    image: "/art/art10.jpg",
-  },
-  {
-    id: 22,
-    title: "Art 22",
-    category: "art",
-    image: "/art/art11.jpg",
-  },
-  {
-    id: 23,
-    title: "Art 23",
-    category: "art",
-    image: "/art/art12.jpg",
-  },
-  {
-    id: 24,
-    title: "Art 24",
-    category: "art",
-    image: "/art/art13.jpg",
-  },
-  {
-    id: 25,
-    title: "Art 25",
-    category: "art",
-    image: "/art/art14.jpg",
-  },
-  {
-    id: 26,
-    title: "Art 26",
-    category: "art",
-    image: "/art/art15.jpg",
-  },
-  {
-    id: 27,
-    title: "Art 27",
-    category: "art",
-    image: "/art/art16.jpg",
-  },
-  {
-    id: 28,
-    title: "Art 28",
-    category: "art",
-    image: "/art/art17.jpg",
-  },
-  {
-    id: 29,
-    title: "Art 29",
-    category: "art",
-    image: "/art/art18.jpg",
-  },
-  {
-    id: 30,
-    title: "Art 30",
-    category: "art",
-    image: "/art/art19.jpg",
-  },
-  {
-    id: 31,
-    title: "Art 31",
-    category: "art",
-    image: "/art/art20.jpg",
-  },
-  {
-    id: 32,
-    title: "Art 32",
-    category: "art",
-    image: "/art/art21.jpg",
-  },
-  {
-    id: 33,
-    title: "Art 33",
-    category: "art",
-    image: "/art/art22.jpg",
-  },
-  {
-    id: 34,
-    title: "Art 34",
-    category: "art",
-    image: "/art/art23.jpg",
-  },
-  {
-    id: 35,
-    title: "Art 35",
-    category: "art",
-    image: "/art/art24.jpg",
-  },
-  {
-    id: 36,
-    title: "Art 36",
-    category: "art",
-    image: "/art/art25.jpg",
-  },
-  {
-    "id": 26,
-    "title": "Art 26",
-    "category": "art",
-    "image": "/art/art26.jpg"
-  },
-  {
-    "id": 27,
-    "title": "Art 27",
-    "category": "art",
-    "image": "/art/art27.jpg"
-  },
-  {
-    "id": 28,
-    "title": "Art 28",
-    "category": "art",
-    "image": "/art/art28.jpg"
-  },
-  {
-    "id": 29,
-    "title": "Art 29",
-    "category": "art",
-    "image": "/art/art29.jpg"
-  },
-  {
-    "id": 30,
-    "title": "Art 30",
-    "category": "art",
-    "image": "/art/art30.jpg"
-  },
-  {
-    "id": 31,
-    "title": "Art 31",
-    "category": "art",
-    "image": "/art/art31.jpg"
-  },
-  {
-    "id": 32,
-    "title": "Art 32",
-    "category": "art",
-    "image": "/art/art32.jpg"
-  },
-  {
-    "id": 33,
-    "title": "Art 33",
-    "category": "art",
-    "image": "/art/art33.jpg"
-  },
-  {
-    "id": 34,
-    "title": "Art 34",
-    "category": "art",
-    "image": "/art/art34.jpg"
-  },
-  {
-    "id": 35,
-    "title": "Art 35",
-    "category": "art",
-    "image": "/art/art35.jpg"
-  },
-  {
-    "id": 36,
-    "title": "Art 36",
-    "category": "art",
-    "image": "/art/art36.jpg"
-  },
-  {
-    "id": 37,
-    "title": "Art 37",
-    "category": "art",
-    "image": "/art/art37.jpg"
-  },
-  {
-    "id": 38,
-    "title": "Art 38",
-    "category": "art",
-    "image": "/art/art38.jpg"
-  },
-  {
-    "id": 39,
-    "title": "Art 39",
-    "category": "art",
-    "image": "/art/art39.jpg"
-  },
-  {
-    "id": 40,
-    "title": "Art 40",
-    "category": "art",
-    "image": "/art/art40.jpg"
-  },
-  {
-    "id": 41,
-    "title": "Art 41",
-    "category": "art",
-    "image": "/art/art41.jpg"
-  },
-  {
-    "id": 42,
-    "title": "Art 42",
-    "category": "art",
-    "image": "/art/art42.jpg"
-  },
-  {
-    "id": 43,
-    "title": "Art 43",
-    "category": "art",
-    "image": "/art/art43.jpg"
-  },
-  {
-    "id": 44,
-    "title": "Art 44",
-    "category": "art",
-    "image": "/art/art44.jpg"
-  },
-  {
-    "id": 45,
-    "title": "Art 45",
-    "category": "art",
-    "image": "/art/art45.jpg"
-  },
-  {
-    "id": 46,
-    "title": "Art 46",
-    "category": "art",
-    "image": "/art/art46.jpg"
-  },
-  {
-    "id": 47,
-    "title": "Art 47",
-    "category": "art",
-    "image": "/art/art47.jpg"
-  }
-];
+// (Legacy hardcoded list removed; we fully rely on dynamic import above)
 
-const categories = [
-  { id: "all", name: "All" },
-  { id: "kitchen", name: "Kitchen" },
-  { id: "bathroom", name: "Bathroom" },
-  { id: "living", name: "Living Room" },
-  { id: "commercial", name: "Commercial" },
-  { id: "art", name: "Art" },
-];
+const toTitle = (s: string) => decodeURIComponent(s.replace(/\+/g, ' ')).replace(/[\/_-]+/g, ' ').trim().replace(/\s+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const toSlug = (s: string) => decodeURIComponent(s.replace(/\+/g, ' ')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-const Gallery = () => {
-  const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState("all");
+const buildGallery = () => {
+  type Item = { id: string; title: string; category: string; image: string };
+  const items: Item[] = [];
+  Object.entries(galleryFiles).forEach(([absPath, url]) => {
+    const rel = absPath.replace(/^\/public\//, '');
+    const parts = rel.split('/').filter(Boolean); // [gallery, Category, ...path, file]
+    const idx = parts.indexOf('gallery');
+    if (idx === -1 || !parts[idx + 1]) return;
+    const category = toTitle(parts[idx + 1]);
+    const file = parts[parts.length - 1];
+    const base = toTitle(file.replace(/\.(webp|jpg|jpeg|png)$/i, ''));
+    const id = toSlug(rel);
+    items.push({ id, title: base, category, image: url.replace(/^\/public/, '') });
+  });
+  // Categories set
+  const cats = Array.from(new Set(items.map(i => i.category))).sort();
+  return { items, cats: ['All', ...cats] };
+};
+
+type GalleryItem = { id: string; title: string; category: string; image: string };
+
+const Gallery = memo(() => {
+  // Preload hero image and ensure fixed background CSS exists (align with other pages)
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/gallery-hero.jpg';
+    const style = document.createElement('style');
+    style.textContent = `.fixed-bg{background-attachment:fixed !important;background-size:cover !important;background-position:center !important;background-repeat:no-repeat !important}`;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  const { items: allItems, cats } = useMemo(() => buildGallery(), []);
+  const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState<GalleryItem | null>(null);
+  const [swiperRef, setSwiperRef] = useState<any>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(16);
+  const [sentinelRef, setSentinelRef] = useState<HTMLDivElement | null>(null);
 
-  const filteredItems = galleryItems.filter((item) => {
-    const matchesCategory =
-      activeCategory === "all" || item.category === activeCategory;
-    const matchesSearch = item.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const relatedItems = useMemo(() => {
+    if (!currentItem) return [] as GalleryItem[];
+    return allItems.filter(i => i.category === currentItem.category && i.id !== currentItem.id);
+  }, [allItems, currentItem]);
 
-  const handleItemClick = (id: number) => {
-    navigate(`/gallery/${id}`);
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return allItems.filter((item) => {
+      const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+      const matchesSearch = !q || item.title.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+  }, [allItems, activeCategory, searchQuery]);
+
+  // Reset list window when filters/search change
+  useEffect(() => {
+    setVisibleCount(16);
+  }, [activeCategory, searchQuery]);
+
+  // Infinite scroll via intersection observer on a sentinel
+  useEffect(() => {
+    if (!sentinelRef) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) {
+        setVisibleCount((c) => Math.min(c + 16, filteredItems.length));
+      }
+    }, { rootMargin: '600px 0px' });
+    obs.observe(sentinelRef);
+    return () => obs.disconnect();
+  }, [sentinelRef, filteredItems.length]);
+
+  const handleItemClick = (id: string) => {
+    const item = allItems.find(i => i.id === id) || null;
+    setCurrentItem(item);
+    setIsModalOpen(!!item);
   };
 
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    // delay clearing to allow exit animation if needed
+    setTimeout(() => setCurrentItem(null), 150);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    if (isModalOpen) window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isModalOpen, closeModal]);
+
   return (
-    <div className="pt-20">
-      <section className="bg-primary text-white py-20">
-        <div className="container mx-auto px-4">
-          <h1 className="text-5xl font-bold mb-6 text-center">Our Gallery</h1>
-          <p className="text-xl text-center max-w-3xl mx-auto">
-            Explore our stunning collection of completed projects
-          </p>
+    <div className="min-h-screen bg-white">
+      {/* Hero matching Products/About/Services style */}
+      <section className="relative h-[80vh] overflow-hidden">
+        <div 
+          className="fixed-bg absolute inset-0"
+          style={{
+            backgroundImage: "url('/gallery-hero.jpg')"
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-4 md:px-6">
+            <motion.h1
+              className="text-4xl md:text-6xl font-light text-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+            >
+              Curated Gallery
+            </motion.h1>
+            <motion.p
+              className="mt-3 text-white/90 text-lg md:text-xl max-w-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+            >
+              Explore premium projects across categories in a refined black & white theme.
+            </motion.p>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 bg-secondary">
+      <section className="py-12">
         <div className="container mx-auto px-4">
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <div className="relative w-full md:w-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
-                placeholder="Search gallery..."
-                className="pl-10 pr-4 py-2 w-full md:w-64 rounded-md border border-gray-300 focus:ring-accent focus:border-accent"
+                placeholder="Search photos..."
+                className="pl-10 pr-4 py-2 w-full rounded-lg border-2 border-black focus:outline-none focus:ring-0 focus:border-black"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`px-4 py-2 rounded-md transition-colors ${activeCategory === category.id
-                    ? "bg-accent text-white"
-                    : "bg-white text-gray-600 hover:bg-accent/10"
-                    }`}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={() => setShowFilters((s) => !s)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-black bg-white text-black hover:bg-black hover:text-white transition-colors"
+            >
+              <SlidersHorizontal className="w-4 h-4" /> Filters
+            </button>
           </div>
-
-          {/* Gallery Grid */}
-          <div ref={ref} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredItems.map((item) => (
+          <AnimatePresence>
+            {showFilters && (
               <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5 }}
-                className="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
-                onClick={() => handleItemClick(item.id)}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-8 p-4 rounded-2xl border-2 border-black bg-white"
+                transition={{ duration: 0.25 }}
               >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="text-center text-white p-4">
-                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                    <button className="inline-flex items-center space-x-2 bg-accent px-4 py-2 rounded-md hover:bg-accent/90 transition-colors">
-                      <ZoomIn className="w-4 h-4" />
-                      <span>View Details</span>
+                <div className="flex flex-wrap gap-2">
+                  {cats.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-2 rounded-full border-2 transition-all ${activeCategory === cat ? 'bg-black text-white border-black' : 'bg-white text-black border-black hover:bg-black hover:text-white'}`}
+                    >
+                      {cat}
                     </button>
-                  </div>
+                  ))}
                 </div>
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
+
+          {/* Gallery Grid */}
+          {filteredItems.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {filteredItems.slice(0, visibleCount).map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.28 }}
+                  className="group relative overflow-hidden rounded-2xl border-2 border-black bg-white cursor-pointer"
+                  onClick={() => handleItemClick(item.id)}
+                >
+                  <div className="w-full h-64 md:h-72 bg-white relative">
+                    {/* Category tag */}
+                    <div className="absolute top-3 left-3 z-[1]">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black text-white border border-black group-hover:bg-white group-hover:text-black transition-colors">
+                        {item.category}
+                      </span>
+                    </div>
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </div>
+                </motion.div>
+              ))}
+              {/* Sentinel to trigger loading more */}
+              {visibleCount < filteredItems.length && (
+                <div ref={setSentinelRef} className="col-span-full h-2" aria-hidden />
+              )}
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="inline-block px-6 py-4 rounded-xl border-2 border-black bg-white text-black"
+              >
+                No items found
+              </motion.div>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {isModalOpen && currentItem && (
+          <motion.div
+            key="gallery-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[2147483000]"
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={closeModal}
+            />
+            <div className="absolute inset-0 flex items-center justify-center p-3 md:p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                transition={{ duration: 0.18 }}
+                className="relative w-[96vw] max-w-5xl max-h-[90vh] mx-auto bg-white/70 backdrop-blur-xl rounded-2xl border-2 border-black shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col"
+              >
+                {/* Close */}
+                <button
+                  onClick={closeModal}
+                  className="absolute right-3 top-3 z-10 inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-black bg-white/80 backdrop-blur-md text-black hover:bg-black hover:text-white transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                {/* WhatsApp */}
+                {currentItem && (
+                  <a
+                    href={`https://wa.me/919000000000?text=${encodeURIComponent(
+                      `Hi, I'm interested in this gallery item (${currentItem.title}) from the ${currentItem.category} category. Image: ${currentItem.image}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute right-14 top-3 z-10 inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#25D366] text-white hover:bg-white hover:text-[#25D366] transition-colors shadow"
+                    aria-label="WhatsApp Inquiry"
+                    title="WhatsApp Inquiry"
+                  >
+                    {/* Simple WhatsApp glyph */}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true">
+                      <path d="M20.52 3.48A11.94 11.94 0 0012.06 0C5.55 0 .29 5.27.29 11.78c0 2.08.54 4.11 1.58 5.91L0 24l6.47-1.83a11.6 11.6 0 005.59 1.49h.01c6.51 0 11.78-5.26 11.78-11.77 0-3.15-1.23-6.11-3.33-8.41zM12.07 21.3h-.01a9.5 9.5 0 01-4.84-1.32l-.35-.2-3.84 1.09 1.03-3.74-.23-.38a9.5 9.5 0 01-1.46-5.11c0-5.25 4.28-9.53 9.54-9.53 2.55 0 4.95.99 6.75 2.79a9.45 9.45 0 012.79 6.74c0 5.25-4.28 9.53-9.54 9.53zm5.5-7.1c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.96-.95 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.5l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.06 2.9 1.2 3.1.15.2 2.08 3.17 5.04 4.45.7.3 1.24.48 1.66.62.7.22 1.34.19 1.85.12.56-.08 1.77-.72 2.02-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z" />
+                    </svg>
+                  </a>
+                )}
+
+                {/* Main image */}
+                <div className="w-full flex-1 min-h-0 p-2 md:p-3">
+                  {/* Ensure a stable viewport-based height so image can fully fit without cropping */}
+                  <div className="w-full h-[62vh] md:h-[70vh]">
+                    <img
+                      src={currentItem.image}
+                      alt={currentItem.title}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                {/* Related slider */}
+                <div className="p-2 md:p-3 border-t-2 border-black bg-white/80 backdrop-blur-md shrink-0 relative">
+                  <div className="mb-2 md:mb-3 text-sm font-semibold text-black">More from {currentItem.category}</div>
+                  <Swiper
+                    spaceBetween={12}
+                    slidesPerView={2.2}
+                    breakpoints={{
+                      640: { slidesPerView: 3.2, spaceBetween: 14 },
+                      768: { slidesPerView: 4.2, spaceBetween: 16 },
+                      1024: { slidesPerView: 5.2, spaceBetween: 16 },
+                    }}
+                    onSwiper={(sw) => {
+                      setSwiperRef(sw);
+                      setCanPrev(!sw.isBeginning);
+                      setCanNext(!sw.isEnd);
+                    }}
+                    onSlideChange={(sw) => {
+                      setCanPrev(!sw.isBeginning);
+                      setCanNext(!sw.isEnd);
+                    }}
+                    onReachBeginning={() => setCanPrev(false)}
+                    onReachEnd={() => setCanNext(false)}
+                  >
+                    {relatedItems.map((rel) => (
+                      <SwiperSlide key={rel.id}>
+                        <button
+                          onClick={() => setCurrentItem(rel)}
+                          className="block w-full overflow-hidden rounded-xl border-2 border-black bg-white hover:opacity-90 transition"
+                        >
+                          <div className="w-full" style={{ aspectRatio: "4 / 3" }}>
+                            <img
+                              src={rel.image}
+                              alt={rel.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </button>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                  {/* Side slider buttons */}
+                  {canPrev && (
+                    <button
+                      onClick={() => swiperRef && swiperRef.slidePrev()}
+                      className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-black bg-white/80 backdrop-blur-md text-black hover:bg-black hover:text-white transition-colors"
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  )}
+                  {canNext && (
+                    <button
+                      onClick={() => swiperRef && swiperRef.slideNext()}
+                      className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-black bg-white/80 backdrop-blur-md text-black hover:bg-black hover:text-white transition-colors"
+                      aria-label="Next"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+});
 
 export default Gallery;

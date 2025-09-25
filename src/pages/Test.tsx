@@ -1102,9 +1102,17 @@ const Test = () => {
   };
 
   if (categoryId) {
-    const categoryProducts = products.filter(
+    const params = new URLSearchParams(window.location.search);
+    const stoneSlug = params.get("stone");
+    let categoryProducts = products.filter(
       (product) => product.category.toLowerCase() === categoryId.toLowerCase()
     );
+    if (stoneSlug) {
+      const normalized = stoneSlug.replace(/-/g, " ").toLowerCase();
+      categoryProducts = categoryProducts.filter((p) =>
+        p.name.toLowerCase().includes(normalized)
+      );
+    }
     if (categoryId === "art") {
       return (
         <>

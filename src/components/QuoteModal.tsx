@@ -132,7 +132,7 @@ const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose }) => {
 
               <button
                 type="submit"
-                className="w-full bg-accent text-white py-2 rounded-md hover:bg-accent/90 transition-colors"
+                className="w-full bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black border-2 border-black hover:border-white transition-all duration-300 font-semibold"
               >
                 Submit Quote Request
               </button>
