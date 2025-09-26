@@ -112,19 +112,46 @@ export const ProductsModernVariant: React.FC = () => {
     };
   }, [heroRef]);
 
-  // Handle deep-link hash navigation like /products#marble
+  // Handle deep-link hash navigation and direct product targeting
   useEffect(() => {
     const validSlabIds = new Set(['marble', 'granite', 'sandstone', 'onyx', 'travertine']);
 
     const navigateToHash = () => {
-      const rawState = (location.state as any)?.target as string | undefined;
+      const state = (location.state as any) || {};
+      const rawState = (state?.target as string | undefined);
       const rawHash = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
       const raw = (rawState || rawHash).toLowerCase();
+      const targetProduct = (state?.targetProduct as string | undefined) || '';
+      const targetCategory = (state?.targetCategory as string | undefined) || '';
+
+      if (targetProduct) {
+        // Ensure slabs visible
+        if (activeCategory !== 'slabs') setActiveCategory('slabs');
+        // After slabs render, try to find the subcategory section containing the product by name (case-insensitive)
+        const tryScrollToProduct = () => {
+          const productNameLower = targetProduct.toLowerCase();
+          // Find subcategory id where any product matches name
+          const matchSub = allSubcategories.find(sub => (sub.products || []).some(p => p.name.toLowerCase() === productNameLower));
+          if (matchSub) {
+            scrollToSection(matchSub.id);
+            return true;
+          }
+          return false;
+        };
+        // Retry a few frames if data not yet painted
+        let attempts = 0;
+        const tick = () => {
+          if (tryScrollToProduct() || attempts > 20) return;
+          attempts += 1;
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(tick));
+        return;
+      }
+
       if (!raw) return;
-      // If the hash matches a slabs subcategory, ensure slabs is active, then scroll
       if (validSlabIds.has(raw)) {
         if (activeCategory !== 'slabs') setActiveCategory('slabs');
-        // allow DOM to paint sections, then scroll
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             scrollToSection(raw);

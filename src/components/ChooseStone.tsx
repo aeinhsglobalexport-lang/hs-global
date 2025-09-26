@@ -98,8 +98,8 @@ const ChooseStone: React.FC = () => {
   const groups = useMemo(() => buildGroupsFromCollection(), []);
 
   const handleClick = (stone: StoneItem) => {
-    // Pass state so Products page can scroll after sections are ready
-    navigate(`/products#${stone.category}`, { state: { target: stone.category } });
+    // Pass target product name for deep scrolling and also hint category
+    navigate(`/products`, { state: { targetProduct: stone.name, targetCategory: 'slabs' } });
   };
 
   return (
@@ -118,7 +118,7 @@ const ChooseStone: React.FC = () => {
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900">{group.title}</h3>
                 <button
-                  onClick={() => navigate(`/products#${group.title.toLowerCase()}` , { state: { target: group.title.toLowerCase() }})}
+                  onClick={() => navigate(`/products#${group.title.toLowerCase()}` , { state: { target: group.title.toLowerCase(), targetCategory: 'slabs' }})}
                   className="text-primary text-sm font-medium hover:underline"
                 >
                   View more
@@ -159,7 +159,7 @@ const ChooseStone: React.FC = () => {
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg md:text-xl font-semibold text-gray-900">{groups[4].title}</h3>
                 <button
-                  onClick={() => navigate(`/products#${groups[4].title.toLowerCase()}` , { state: { target: groups[4].title.toLowerCase() }})}
+                  onClick={() => navigate(`/products#${groups[4].title.toLowerCase()}` , { state: { target: groups[4].title.toLowerCase(), targetCategory: 'slabs' }})}
                   className="text-primary text-sm font-medium hover:underline"
                 >
                   View more
