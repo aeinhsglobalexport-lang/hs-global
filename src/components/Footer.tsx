@@ -18,9 +18,9 @@ const FooterVariant1: React.FC = () => {
             </p>
             <div className="flex space-x-4">
               {[
-                { name: 'Facebook', Icon: Facebook, href: '#' },
-                { name: 'Instagram', Icon: Instagram, href: '#' },
-                { name: 'LinkedIn', Icon: Linkedin, href: '#' },
+                { name: 'Facebook', Icon: Facebook, href: 'https://www.facebook.com/people/HS-Global-Export/61571531083009/' },
+                { name: 'Instagram', Icon: Instagram, href: 'https://www.instagram.com/hsglobalexport116/' },
+                { name: 'LinkedIn', Icon: Linkedin, href: 'https://in.linkedin.com/company/hs-global-export' },
               ].map(({ name, Icon, href }) => (
                 <a
                   key={name}
@@ -38,11 +38,10 @@ const FooterVariant1: React.FC = () => {
             <h4 className="text-lg font-semibold mb-6 text-black">Products</h4>
             <ul className="space-y-3">
               {[
-                { label: 'All Products', href: '/products' },
-                { label: 'Marble', href: '/products/marble' },
-                { label: 'Granite', href: '/products/granite' },
-                { label: 'Onyx', href: '/products/onyx' },
-                { label: 'Sandstone', href: '/products/sandstone' }
+                { label: 'Marble', href: '/products#marble' },
+                { label: 'Granite', href: '/products#granite' },
+                { label: 'Onyx', href: '/products#onyx' },
+                { label: 'Sandstone', href: '/products#sandstone' }
               ].map((link) => (
                 <li key={link.label}>
                   <a href={link.href} className="text-gray-600 hover:text-amber-500 transition-colors duration-200 flex items-center group">
