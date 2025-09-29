@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import React from "react";
+import { motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const slides = [
   {
@@ -27,32 +27,7 @@ const slides = [
 ];
 
 const Hero = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const autoPlayRef = useRef<NodeJS.Timeout>();
   const navition = useNavigate();
-  const nextSlide = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-    setTimeout(() => setIsAnimating(false), 500);
-  };
-
-  const prevSlide = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    setTimeout(() => setIsAnimating(false), 500);
-  };
-
-  useEffect(() => {
-    autoPlayRef.current = setInterval(nextSlide, 5000);
-    return () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current);
-      }
-    };
-  }, []);
 
   return (
     <section className="relative h-[calc(100vh-80px)] overflow-hidden bg-primary">
@@ -60,8 +35,7 @@ const Hero = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: `url(${slides[1].imageUrl})`,
-          backgroundAttachment: 'fixed'
+          backgroundImage: `url(${slides[1].imageUrl})`
         }}
       >
         <div className="absolute inset-0 bg-black bg-opacity-10" />

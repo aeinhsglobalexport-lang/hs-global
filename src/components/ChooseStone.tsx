@@ -124,15 +124,15 @@ const ChooseStone: React.FC = () => {
                   View more
                 </button>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {group.stones.slice(0, 8).map((stone) => (
                   <button
                     key={stone.id}
                     onClick={() => handleClick(stone)}
-                    className="group flex flex-col items-center text-center"
+                    className="group flex flex-col items-center text-center min-w-0"
                     aria-label={`View products in ${stone.name}`}
                   >
-                    <span className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
+                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
                       <img
                         src={stone.image}
                         alt={stone.name}
@@ -165,15 +165,15 @@ const ChooseStone: React.FC = () => {
                   View more
                 </button>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {groups[4].stones.slice(0, 8).map((stone) => (
                   <button
                     key={stone.id}
                     onClick={() => handleClick(stone)}
-                    className="group flex flex-col items-center text-center"
+                    className="group flex flex-col items-center text-center min-w-0"
                     aria-label={`View products in ${stone.name}`}
                   >
-                    <span className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
+                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
                       <img
                         src={stone.image}
                         alt={stone.name}
