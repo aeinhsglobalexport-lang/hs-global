@@ -78,6 +78,8 @@ const CategoriesSlider: React.FC = () => {
                         alt={cat.title}
                         className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
+                        decoding="async"
+                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
                       />
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 p-4 z-20">

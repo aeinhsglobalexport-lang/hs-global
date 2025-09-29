@@ -18,7 +18,7 @@ const slides = [
     navigation: "/products",
   },
   {
-    imageUrl: "/banner/banner3.webp",
+    imageUrl: "/banner/banner4.jpg",
     title: "CRAFTING ELEGANCE",
     subtitle: "IN STONE",
     description: "Bespoke designs for discerning clients",
@@ -33,7 +33,7 @@ const Hero = () => {
     <section className="relative h-[calc(100vh-80px)] overflow-hidden bg-primary">
       {/* Fixed Background Image - Second Slide */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
         style={{ 
           backgroundImage: `url(${slides[1].imageUrl})`
         }}
