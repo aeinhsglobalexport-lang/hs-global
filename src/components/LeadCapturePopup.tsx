@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, Phone, MessageSquare, Building, Home, CheckCircle } from 'lucide-react';
 import { initEmailJs, sendEmail } from '../lib/email';
+import { countries as allCountries, Country } from '../data/countries';
 
 interface LeadCapturePopupProps {
   isOpen: boolean;
@@ -26,57 +27,9 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const countryWrapRef = useRef<HTMLDivElement | null>(null);
 
-  const countryCodes = [
-    { code: '+91', country: 'India', flag: '🇮🇳' },
-    { code: '+1', country: 'USA', flag: '🇺🇸' },
-    { code: '+44', country: 'UK', flag: '🇬🇧' },
-    { code: '+971', country: 'UAE', flag: '🇦🇪' },
-    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
-    { code: '+974', country: 'Qatar', flag: '🇶🇦' },
-    { code: '+973', country: 'Bahrain', flag: '🇧🇭' },
-    { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
-    { code: '+968', country: 'Oman', flag: '🇴🇲' },
-    { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
-    { code: '+65', country: 'Singapore', flag: '🇸🇬' },
-    { code: '+86', country: 'China', flag: '🇨🇳' },
-    { code: '+81', country: 'Japan', flag: '🇯🇵' },
-    { code: '+82', country: 'South Korea', flag: '🇰🇷' },
-    { code: '+61', country: 'Australia', flag: '🇦🇺' },
-    { code: '+27', country: 'South Africa', flag: '🇿🇦' },
-    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
-    { code: '+52', country: 'Mexico', flag: '🇲🇽' },
-    { code: '+33', country: 'France', flag: '🇫🇷' },
-    { code: '+49', country: 'Germany', flag: '🇩🇪' },
-    { code: '+39', country: 'Italy', flag: '🇮🇹' },
-    { code: '+34', country: 'Spain', flag: '🇪🇸' },
-    { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
-    { code: '+46', country: 'Sweden', flag: '🇸🇪' },
-    { code: '+47', country: 'Norway', flag: '🇳🇴' },
-    { code: '+45', country: 'Denmark', flag: '🇩🇰' },
-    { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
-    { code: '+43', country: 'Austria', flag: '🇦🇹' },
-    { code: '+32', country: 'Belgium', flag: '🇧🇪' },
-    { code: '+351', country: 'Portugal', flag: '🇵🇹' },
-    { code: '+30', country: 'Greece', flag: '🇬🇷' },
-    { code: '+90', country: 'Turkey', flag: '🇹🇷' },
-    { code: '+7', country: 'Russia', flag: '🇷🇺' },
-    { code: '+380', country: 'Ukraine', flag: '🇺🇦' },
-    { code: '+48', country: 'Poland', flag: '🇵🇱' },
-    { code: '+420', country: 'Czech Republic', flag: '🇨🇿' },
-    { code: '+36', country: 'Hungary', flag: '🇭🇺' },
-    { code: '+40', country: 'Romania', flag: '🇷🇴' },
-    { code: '+359', country: 'Bulgaria', flag: '🇧🇬' },
-    { code: '+385', country: 'Croatia', flag: '🇭🇷' },
-    { code: '+386', country: 'Slovenia', flag: '🇸🇮' },
-    { code: '+421', country: 'Slovakia', flag: '🇸🇰' },
-    { code: '+370', country: 'Lithuania', flag: '🇱🇹' },
-    { code: '+371', country: 'Latvia', flag: '🇱🇻' },
-    { code: '+372', country: 'Estonia', flag: '🇪🇪' },
-    { code: '+358', country: 'Finland', flag: '🇫🇮' },
-    { code: '+353', country: 'Ireland', flag: '🇮🇪' },
-    { code: '+354', country: 'Iceland', flag: '🇮🇸' },
-    { code: '+375', country: 'Belarus', flag: '🇧🇾' }
-  ];
+  const countriesList: Country[] = useMemo(() => {
+    return [...allCountries];
+  }, []);
 
   const serviceOptions = [
     'Marble',
@@ -109,10 +62,12 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
     }
   };
 
-  const filteredCountryCodes = countryCodes.filter((c) => {
-    const q = (countryQuery || '').toLowerCase().trim();
-    return !q || c.code.toLowerCase().includes(q) || c.country.toLowerCase().includes(q);
-  }).slice(0, 20);
+  const filteredCountries = countriesList.filter((c) => {
+    const raw = (countryQuery || '').toLowerCase().trim();
+    const aliasMap: Record<string, string> = { 'usa': 'united states', 'uk': 'united kingdom', 'uae': 'united arab emirates' };
+    const q = aliasMap[raw] || raw;
+    return !q || c.dialCode.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+  });
 
   const handlePickCountry = (code: string) => {
     setFormData(prev => ({ ...prev, countryCode: code }));
@@ -264,7 +219,7 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-md"
           onClick={handleClose}
           style={{ 
             position: 'fixed',
@@ -331,7 +286,7 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
                   scrollbarColor: '#000 #f3f4f6'
                 }}
               >
-                <style jsx>{`
+                <style>{`
                   div::-webkit-scrollbar {
                     width: 6px;
                   }
@@ -414,7 +369,7 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
                         aria-expanded={showCountryDropdown}
                       >
                         <span className="text-base">
-                          {(countryCodes.find(c => c.code === formData.countryCode) || { flag: '🌐' }).flag}
+                          {(countriesList.find(c => c.dialCode === formData.countryCode) || { flag: '🌐' as any }).flag}
                         </span>
                         <span className="font-medium">{formData.countryCode}</span>
                         <svg className="w-3.5 h-3.5 ml-1" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>
@@ -430,21 +385,21 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
                               className="w-full px-2 py-1.5 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                             />
                           </div>
-                          {filteredCountryCodes.length === 0 && (
+                          {filteredCountries.length === 0 && (
                             <div className="px-3 py-2 text-xs text-gray-500">No matches</div>
                           )}
-                          {filteredCountryCodes.map((c) => (
+                          {filteredCountries.map((c) => (
                             <button
                               type="button"
-                              key={c.code}
+                              key={`${c.code}-${c.dialCode}`}
                               onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => handlePickCountry(c.code)}
+                              onClick={() => handlePickCountry(c.dialCode)}
                               className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm flex items-center gap-2"
                               role="option"
                             >
                               <span className="text-base">{c.flag}</span>
-                              <span className="font-medium">{c.code}</span>
-                              <span className="text-gray-500 text-xs">{c.country}</span>
+                              <span className="font-medium">{c.dialCode}</span>
+                              <span className="text-gray-500 text-xs">{c.name}</span>
                             </button>
                           ))}
                         </div>

@@ -123,7 +123,7 @@ const TestimonialVariant2: React.FC = () => {
             pagination={{
               clickable: true,
               renderBullet: (_i, className) => {
-                return `<span class="${className} !bg-amber-400 !w-3 !h-3"></span>`;
+                return `<span class="${className} !bg-black !w-3 !h-3"></span>`;
               },
             }}
             navigation={{ nextEl: '.swiper-button-next-custom', prevEl: '.swiper-button-prev-custom' }}
@@ -134,7 +134,7 @@ const TestimonialVariant2: React.FC = () => {
               <SwiperSlide key={testimonial.id}>
                 <motion.div
                   //   whileHover={{ y: -4 }}
-                  className="bg-white/85 backdrop-blur-sm rounded-2xl overflow-hidden p-8 min-h-[22rem] flex flex-col justify-between border border-transparent hover:border-amber-400/60 shadow-sm hover:shadow-lg transition-all duration-300"
+                  className="bg-white/85 backdrop-blur-sm rounded-2xl overflow-hidden p-8 min-h-[22rem] flex flex-col justify-between border border-transparent hover:border-black/40 shadow-sm hover:shadow-lg transition-all duration-300"
                 >
                   <div>
                     <p className="text-gray-800 text-lg leading-relaxed mb-6 flex-grow">"{testimonial.content}"</p>
@@ -145,17 +145,17 @@ const TestimonialVariant2: React.FC = () => {
                       <img
                         src={testimonial.image}
                         alt={testimonial.name}
-                        className="w-14 h-14 rounded-full object-cover shadow-lg mr-4 ring-2 ring-amber-400/50"
+                        className="w-14 h-14 rounded-full object-cover shadow-lg mr-4 ring-2 ring-black/30"
                       />
                       <div>
                         <h4 className="text-gray-900 font-bold text-lg">{testimonial.name}</h4>
-                        <p className="text-amber-600 font-semibold">{testimonial.position}</p>
+                        <p className="text-black font-semibold">{testimonial.position}</p>
                         <p className="text-gray-600 text-sm">{testimonial.company}</p>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-amber-700 bg-amber-400/25 px-3 py-1 rounded-full">{testimonial.project}</span>
+                      <span className="text-black bg-black/10 px-3 py-1 rounded-full">{testimonial.project}</span>
                       <span className="text-gray-700">{testimonial.location}</span>
                     </div>
                   </div>
@@ -164,10 +164,10 @@ const TestimonialVariant2: React.FC = () => {
             ))}
           </Swiper>
 
-          <button className="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 border border-white/30 hover:border-amber-400/50">
+          <button className="swiper-button-prev-custom absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 border border-white/30 hover:border-black/50">
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
-          <button className="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 border border-white/30 hover:border-amber-400/50">
+          <button className="swiper-button-next-custom absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300 border border-white/30 hover:border-black/50">
             <ChevronRight className="w-6 h-6 text-white" />
           </button>
         </div>

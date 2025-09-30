@@ -72,7 +72,7 @@ const Header = () => {
       <nav
         className={`max-w-6xl mx-auto transition-[background-color,backdrop-filter,box-shadow] duration-500 ease-in-out ${
           isScrolled 
-            ? "bg-white/10 backdrop-blur-3xl shadow-2xl fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[calc(100%-3rem)] rounded-3xl border border-white/20" 
+            ? "bg-white/10 backdrop-blur-3xl shadow-2xl fixed top-6 left-1/2 transform -translate-x-1/2 z-40 w-[calc(100%-3rem)] rounded-3xl border border-white/20" 
             : "bg-white/80 backdrop-blur-md rounded-2xl"
         } ${location.pathname.startsWith('/productsinfo') ? 'mt-4' : ''}`}
         style={{

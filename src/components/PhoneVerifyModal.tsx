@@ -98,11 +98,20 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
       const full = `${selectedCountry.dialCode}${phoneNumber}`.replace(/\D/g, '');
       const resp = await fetch('/api/otp/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ phone: full })
       });
-      const data = await resp.json();
-      if (!resp.ok || !data.ok) throw new Error(data.error || 'Failed to send OTP');
+      let data: any = null;
+      try {
+        const ct = resp.headers.get('content-type') || '';
+        data = ct.includes('application/json') ? await resp.json() : null;
+      } catch {
+        data = null;
+      }
+      if (!resp.ok || !data || data.ok !== true) {
+        const serverMsg = (data && (data.error || data.message)) || undefined;
+        throw new Error(serverMsg || 'Failed to send OTP');
+      }
       setOtpToken(String(data.otpToken || ''));
       setStep('otp');
     } catch (err: any) {
@@ -125,11 +134,20 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
       const full = `${selectedCountry.dialCode}${phoneNumber}`.replace(/\D/g, '');
       const resp = await fetch('/api/otp/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ phone: full, code: otp, otpToken })
       });
-      const data = await resp.json();
-      if (!resp.ok || !data.ok) throw new Error(data.error || 'Invalid code');
+      let data: any = null;
+      try {
+        const ct = resp.headers.get('content-type') || '';
+        data = ct.includes('application/json') ? await resp.json() : null;
+      } catch {
+        data = null;
+      }
+      if (!resp.ok || !data || data.ok !== true) {
+        const serverMsg = (data && (data.error || data.message)) || undefined;
+        throw new Error(serverMsg || 'Invalid code');
+      }
       setStep('success');
       setTimeout(() => {
         const fullPhoneNumber = `${selectedCountry.dialCode}${phoneNumber}`;
@@ -167,7 +185,7 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -248,8 +266,10 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
                             <div className="max-h-60 overflow-y-auto">
                             {countries
                               .filter(c => {
-                                const q = countryQuery.trim().toLowerCase();
-                                if (!q) return true;
+                                const raw = countryQuery.trim().toLowerCase();
+                                if (!raw) return true;
+                                const aliasMap: Record<string, string> = { 'usa': 'united states', 'uk': 'united kingdom', 'uae': 'united arab emirates' };
+                                const q = aliasMap[raw] || raw;
                                 return c.name.toLowerCase().includes(q) || c.dialCode.replace('+','').includes(q.replace('+',''));
                               })
                               .map((country) => (

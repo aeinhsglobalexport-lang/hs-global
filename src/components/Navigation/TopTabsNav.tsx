@@ -178,7 +178,7 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
       ref={rootRef}
       className={`${
         forceFixed ? 'fixed top-0 left-0 right-0' : 'sticky top-0'
-      } z-[2000] border-b transition-all duration-300 ${forceFixed ? 'bg-white/70 supports-[backdrop-filter]:bg-white/50 backdrop-blur-md border-gray-200/70 shadow-sm' : 'bg-transparent backdrop-blur-0 border-transparent shadow-none'}`}
+      } z-40 border-b transition-all duration-300 ${forceFixed ? 'bg-white/70 supports-[backdrop-filter]:bg-white/50 backdrop-blur-md border-gray-200/70 shadow-sm' : 'bg-transparent backdrop-blur-0 border-transparent shadow-none'}`}
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}

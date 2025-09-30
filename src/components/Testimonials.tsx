@@ -39,7 +39,7 @@ const Testimonials = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/banner/banner3.webp')`,
+          backgroundImage: `url('/banner/banner4.jpg')`,
           backgroundAttachment: 'fixed'
         }}
       >
@@ -69,15 +69,15 @@ const Testimonials = () => {
                   className="w-16 h-16 rounded-full object-cover mr-4"
                 />
                 <div>
-                  <h3 className="font-semibold text-primary">{testimonial.name}</h3>
-                  <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                  <h3 className="font-semibold text-black">{testimonial.name}</h3>
+                  <p className="text-gray-700 text-sm">{testimonial.role}</p>
                 </div>
               </div>
               <div className="flex mb-4">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className="w-5 h-5 text-accent fill-current"
+                    className="w-5 h-5 text-black fill-black"
                   />
                 ))}
               </div>

@@ -11,16 +11,21 @@ const ensureTwilio = () => {
   }
 };
 
+const jsonHeaders = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } as const;
+
 const handler: Handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: { ...jsonHeaders, 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }, body: '' };
+  }
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers: jsonHeaders, body: JSON.stringify({ ok: false, error: 'Method Not Allowed' }) };
   }
   try {
     const body = JSON.parse(event.body || '{}');
     const to = String(body.to || '').trim();
     const text = String(body.text || '').trim();
     if (!to || !text) {
-      return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Missing to/text' }) };
+      return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ ok: false, error: 'Missing to/text' }) };
     }
 
     ensureTwilio();
@@ -38,9 +43,9 @@ const handler: Handler = async (event) => {
       console.log('[send-whatsapp] send failed, fallback log-only:', (e as Error).message);
       console.log('[send-whatsapp] message:', { to, text });
     }
-    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+    return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ ok: true }) };
   } catch {
-    return { statusCode: 500, body: JSON.stringify({ ok: false }) };
+    return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ ok: false, error: 'Server error' }) };
   }
 };
 

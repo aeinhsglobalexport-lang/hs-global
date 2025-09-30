@@ -158,7 +158,7 @@ export const generateSlabCategories = (): Category[] => {
         const images = [...stand, ...others];
         const baseName = sanitizeStoneName(prodKey);
         const p: Product = {
-          id: `${cat.id}-marble-${prodKey.toLowerCase().replace(/\s+/g, '-')}`,
+          id: `${cat.id}-${prodKey.toLowerCase().replace(/\s+/g, '-')}`,
           name: disambiguate(baseName, categoryKey),
           category: 'slabs',
           subcategory: 'marble',
