@@ -123,6 +123,7 @@ export const ProductsModernVariant: React.FC = () => {
       const raw = (rawState || rawHash).toLowerCase();
       const targetProduct = (state?.targetProduct as string | undefined) || '';
       const targetCategory = (state?.targetCategory as string | undefined) || '';
+      const targetMain = (state?.targetMain as string | undefined) || '';
 
       if (targetProduct) {
         // Ensure slabs visible
@@ -130,8 +131,20 @@ export const ProductsModernVariant: React.FC = () => {
         // After slabs render, try to find the subcategory section containing the product by name (case-insensitive)
         const tryScrollToProduct = () => {
           const productNameLower = targetProduct.toLowerCase();
-          // Find subcategory id where any product matches name
-          const matchSub = allSubcategories.find(sub => (sub.products || []).some(p => p.name.toLowerCase() === productNameLower));
+          const mainLower = (targetMain || '').toLowerCase();
+          // Find subcategory id where any product matches name; if main category provided, prefer its subcategory id
+          const candidates = allSubcategories.filter(sub => (sub.products || []).some(p => p.name.toLowerCase() === productNameLower));
+          let matchSub = candidates[0];
+          if (mainLower) {
+            // find parent category id for this subcategory to prefer matches within the intended main
+            const preferred = candidates.find(sub => {
+              const parentCategory = categories.find(cat =>
+                cat.subcategories.some(s => s.id === sub.id || (s.subcategories || []).some(c => c.id === sub.id))
+              );
+              return parentCategory?.id === 'slabs' && ['marble','granite','onyx','sandstone','travertine'].includes(sub.id) ? sub.id === mainLower : parentCategory?.id === 'slabs';
+            });
+            if (preferred) matchSub = preferred;
+          }
           if (matchSub) {
             scrollToSection(matchSub.id);
             return true;
