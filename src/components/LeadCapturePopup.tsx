@@ -126,7 +126,7 @@ const LeadCapturePopup: React.FC<LeadCapturePopupProps> = ({ isOpen, onClose }) 
 
     try {
       await sendEmail(
-        (import.meta as any).env.VITE_EMAILJS_TEMPLATE_POPUP || 'template_popup',
+        (import.meta as any).env.VITE_EMAILJS_TEMPLATE_POPUP || 'template_83tzsh9',
         {
           to_email: 'hsglobalexport@gmail.com',
           subject: 'New Lead (Website Popup)',

@@ -10,8 +10,8 @@ const toTitle = (s: string) => decodeURIComponent(s.replace(/\+/g, ' ')).replace
 const toSlug = (s: string) => decodeURIComponent(s.replace(/\+/g, ' ')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 const buildGallery = () => {
-  type Item = { id: string; title: string; category: string; image: string };
-  const items: Item[] = [];
+  type Item = { id: string; title: string; category: string; image: string; code: string };
+  const interim: { path: string; title: string; category: string; image: string }[] = [];
   Object.entries(galleryFiles).forEach(([absPath, url]) => {
     const rel = absPath.replace(/^\/public\//, '');
     const parts = rel.split('/').filter(Boolean); // [gallery, Category, ...path, file]
@@ -21,14 +21,29 @@ const buildGallery = () => {
     const file = parts[parts.length - 1];
     const base = toTitle(file.replace(/\.(webp|jpg|jpeg|png)$/i, ''));
     const id = toSlug(rel);
-    items.push({ id, title: base, category, image: url.replace(/^\/public/, '') });
+    interim.push({ path: rel, title: base, category, image: url.replace(/^\/public/, '') });
+  });
+  // Assign stable codes per category: HS + first two letters of category + 3-digit index
+  const byCat = new Map<string, { idx: number; list: Item[] }>();
+  interim.sort((a, b) => a.category.localeCompare(b.category) || a.title.localeCompare(b.title));
+  const items: Item[] = interim.map(({ path, title, category, image }) => {
+    const id = toSlug(path);
+    const key = category;
+    if (!byCat.has(key)) byCat.set(key, { idx: 1, list: [] });
+    const entry = byCat.get(key)!;
+    const prefix = `HS${key.slice(0,2).toUpperCase()}`;
+    const code = `${prefix}${String(entry.idx).padStart(3, '0')}`;
+    entry.idx += 1;
+    const item: Item = { id, title, category, image, code };
+    entry.list.push(item);
+    return item;
   });
   // Categories set
   const cats = Array.from(new Set(items.map(i => i.category))).sort();
   return { items, cats: ['All', ...cats] };
 };
 
-type GalleryItem = { id: string; title: string; category: string; image: string };
+type GalleryItem = { id: string; title: string; category: string; image: string; code: string };
 
 const Gallery = memo(() => {
   // Preload hero image and ensure fixed background CSS exists (align with other pages)
@@ -45,9 +60,11 @@ const Gallery = memo(() => {
   const { items: allItems, cats } = useMemo(() => buildGallery(), []);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<GalleryItem | null>(null);
+  const [modalList, setModalList] = useState<GalleryItem[]>([]);
+  const [modalIndex, setModalIndex] = useState<number>(-1);
   const [swiperRef, setSwiperRef] = useState<any>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
@@ -88,8 +105,13 @@ const Gallery = memo(() => {
 
   const handleItemClick = (id: string) => {
     const item = allItems.find(i => i.id === id) || null;
+    if (!item) return;
+    const list = allItems.filter(i => i.category === item.category);
+    const idx = list.findIndex(i => i.id === item.id);
+    setModalList(list);
+    setModalIndex(idx);
     setCurrentItem(item);
-    setIsModalOpen(!!item);
+    setIsModalOpen(true);
   };
 
   const closeModal = useCallback(() => {
@@ -115,6 +137,25 @@ const Gallery = memo(() => {
       setSwiperComponents({ Swiper: mod.Swiper, SwiperSlide: mod.SwiperSlide });
     })();
   }, [isModalOpen, SwiperComponents]);
+
+  // Arrow key navigation through related items inside modal
+  useEffect(() => {
+    if (!isModalOpen || !currentItem) return;
+    const handler = (e: KeyboardEvent) => {
+      if (!currentItem || modalList.length === 0) return;
+      if (e.key === 'ArrowRight') {
+        const nextIndex = (modalIndex + 1) % modalList.length;
+        setModalIndex(nextIndex);
+        setCurrentItem(modalList[nextIndex]);
+      } else if (e.key === 'ArrowLeft') {
+        const prevIndex = (modalIndex - 1 + modalList.length) % modalList.length;
+        setModalIndex(prevIndex);
+        setCurrentItem(modalList[prevIndex]);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isModalOpen, currentItem, modalList, modalIndex]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -143,7 +184,7 @@ const Gallery = memo(() => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.05 }}
             >
-              Explore premium projects across categories in a refined black & white theme.
+              See real installations across kitchens, baths, living spaces and bespoke art. Browse high‑resolution photos to evaluate finishes, edge profiles and design details before you decide.
             </motion.p>
           </div>
         </div>
@@ -276,8 +317,8 @@ const Gallery = memo(() => {
                 {/* WhatsApp */}
                 {currentItem && (
                   <a
-                    href={`https://wa.me/919000000000?text=${encodeURIComponent(
-                      `Hi, I'm interested in this gallery item (${currentItem.title}) from the ${currentItem.category} category. Image: ${currentItem.image}`
+                    href={`https://wa.me/918107115116?text=${encodeURIComponent(
+                      `Hi, I'm interested in code ${currentItem.code} from the ${currentItem.category} gallery. Image: ${currentItem.image}`
                     )}`}
                     target="_blank"
                     rel="noreferrer"
@@ -292,10 +333,11 @@ const Gallery = memo(() => {
                   </a>
                 )}
 
-                {/* Main image */}
+                {/* Main image + code */}
                 <div className="w-full flex-1 min-h-0 p-2 md:p-3">
                   {/* Ensure a stable viewport-based height so image can fully fit without cropping */}
                   <div className="w-full h-[62vh] md:h-[70vh]">
+                    <div className="mt-0 text-center text-sm font-semibold text-black">Code: {currentItem.code}</div>
                     <img
                       src={currentItem.image}
                       alt={currentItem.title}

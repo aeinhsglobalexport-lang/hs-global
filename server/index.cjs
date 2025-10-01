@@ -39,7 +39,7 @@ app.post('/api/otp/send', async (req, res) => {
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM) {
       console.warn('Twilio env not configured. Logging OTP only.');
       console.log(`[OTP] ${phone} => ${code}`);
-      return res.json({ ok: true, note: 'log-only (configure Twilio env to send)', ttlMs: 5 * 60 * 1000 });
+      return res.json({ ok: true, note: 'log-only (configure Twilio env to send)', ttlMs: 5 * 60 * 1000, otpToken: code });
     }
 
     let twilioLib;
@@ -48,7 +48,7 @@ app.post('/api/otp/send', async (req, res) => {
     } catch (err) {
       console.warn('Twilio SDK not installed. Logging OTP only.');
       console.log(`[OTP] ${phone} => ${code}`);
-      return res.json({ ok: true, note: 'log-only (install twilio to send)', ttlMs: 5 * 60 * 1000 });
+      return res.json({ ok: true, note: 'log-only (install twilio to send)', ttlMs: 5 * 60 * 1000, otpToken: code });
     }
 
     const twilio = twilioLib(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
@@ -58,21 +58,21 @@ app.post('/api/otp/send', async (req, res) => {
         from: TWILIO_FROM,
         to: `+${String(phone).replace(/\D/g, '')}`,
       });
-      return res.json({ ok: true, sid: msg.sid, ttlMs: 5 * 60 * 1000 });
+      return res.json({ ok: true, sid: msg.sid, ttlMs: 5 * 60 * 1000, otpToken: code });
     } catch (err) {
       // Handle Twilio trial/unverified phone gracefully for development
       const codeStr = err && (err.code || err.status);
       if (codeStr === 21608 || codeStr === 400) {
         console.warn('Twilio trial/unverified destination. Proceeding in log-only mode.');
         console.log(`[OTP] ${phone} => ${code}`);
-        return res.json({ ok: true, note: 'twilio_trial_unverified', ttlMs: 5 * 60 * 1000, dev: process.env.NODE_ENV !== 'production' ? { code } : undefined });
+        return res.json({ ok: true, note: 'twilio_trial_unverified', ttlMs: 5 * 60 * 1000, otpToken: code, dev: process.env.NODE_ENV !== 'production' ? { code } : undefined });
       }
       // Any other send error: in development, log+proceed; in production, fail
       console.error('Twilio send error:', err);
       if (process.env.NODE_ENV !== 'production') {
         console.warn('Dev mode fallback: logging OTP and returning ok.');
         console.log(`[OTP] ${phone} => ${code}`);
-        return res.json({ ok: true, note: 'twilio_send_error_dev_fallback', ttlMs: 5 * 60 * 1000, dev: { code } });
+        return res.json({ ok: true, note: 'twilio_send_error_dev_fallback', ttlMs: 5 * 60 * 1000, otpToken: code, dev: { code } });
       }
       throw err;
     }
@@ -80,7 +80,7 @@ app.post('/api/otp/send', async (req, res) => {
     console.error('OTP send failed', e);
     if (process.env.NODE_ENV !== 'production') {
       // As a last resort in dev, respond ok so the flow is testable
-      return res.json({ ok: true, note: 'dev_fallback', ttlMs: 5 * 60 * 1000 });
+      return res.json({ ok: true, note: 'dev_fallback', ttlMs: 5 * 60 * 1000, otpToken: code || '000000' });
     }
     return res.status(500).json({ ok: false, error: 'OTP send failed' });
   }

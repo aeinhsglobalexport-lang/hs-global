@@ -13,15 +13,15 @@ const handler: Handler = async (event) => {
     const body = JSON.parse(event.body || '{}');
     const code = String(body.code || '').trim();
     const otpToken = String(body.otpToken || '').trim();
-    const valid = code && otpToken && code === otpToken;
+    const valid = !!(code && otpToken && code === otpToken);
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ ok: valid })
     };
-  } catch {
-    return { statusCode: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false }) };
+  } catch (e) {
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ ok: false, error: 'Server error' }) };
   }
 };
 

@@ -228,8 +228,8 @@ export const generateSlabCategories = (): Category[] => {
     categories.push(cat);
   });
 
-  // Ensure a stable order of main categories
-  const order = ['marble', 'granite', 'onyx', 'sandstone', 'travertine'];
+  // Ensure a stable order of main categories (Granite first, then Marble)
+  const order = ['granite', 'marble', 'onyx', 'sandstone', 'travertine'];
   categories.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 
   return categories;

@@ -67,7 +67,10 @@ const CategoriesSlider: React.FC = () => {
             {furnitureSlides.map((cat) => (
               <SwiperSlide key={cat.id}>
                 <button
-                  onClick={() => navigate(`/products?cat=furniture#${cat.id}`)}
+                  onClick={() => {
+                    // Pass both URL and state for robust deep linking
+                    navigate(`/products?cat=furniture#${cat.id}` , { state: { targetCategory: 'furniture', target: cat.id } });
+                  }}
                   className="group w-full text-left"
                   aria-label={`View ${cat.title}`}
                 >

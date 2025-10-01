@@ -39,7 +39,8 @@ const FooterVariant1: React.FC = () => {
             <ul className="space-y-3">
               {[
                 { label: 'Marble', href: '/products#marble' },
-                { label: 'Granite', href: '/products#granite' },
+                // Direct Granite to top granite group (Alaska) for better UX
+                { label: 'Granite', href: '/products#alaska' },
                 { label: 'Onyx', href: '/products#onyx' },
                 { label: 'Sandstone', href: '/products#sandstone' }
               ].map((link) => (
@@ -80,13 +81,13 @@ const FooterVariant1: React.FC = () => {
                 <MapPin className="w-5 h-5 text-amber-500 mr-3 group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-gray-600 text-sm">C-108, Titanium Business Park, Makarba, Ahmedabad - 380051.</span>
               </div>
-              <div className="flex items-center group">
+              <a href="tel:+918107115116" className="flex items-center group">
                 <Phone className="w-5 h-5 text-amber-500 mr-3 group-hover:scale-110 transition-transform duration-200" />
                 <span className="text-gray-600 text-sm">+91 81071 15116</span>
-              </div>
+              </a>
               <div className="flex items-center group">
                 <Mail className="w-5 h-5 text-amber-500 mr-3 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-gray-600 text-sm">hsglobalexport@gmail.com</span>
+                <a href="mailto:hsglobalexport@gmail.com" className="text-gray-600 text-sm hover:text-amber-500">hsglobalexport@gmail.com</a>
               </div>
               <div className="flex items-center group">
                 <Clock className="w-5 h-5 text-amber-500 mr-3 group-hover:scale-110 transition-transform duration-200" />

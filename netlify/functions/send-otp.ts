@@ -3,8 +3,8 @@ import type { Handler } from '@netlify/functions';
 // Optional Twilio import is dynamic to avoid bundling issues when not configured
 let twilioClient: any = null;
 const ensureTwilio = () => {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
+  const sid = process.env.TWILIO_ACCOUNT_SID || 'AC64e9db0c5f41baf49d4f5d0c9db28acc';
+  const token = process.env.TWILIO_AUTH_TOKEN || '72ef73ded66bc0332ec2efaacda0fb85';
   if (sid && token) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const twilio = require('twilio');
@@ -33,10 +33,11 @@ const handler: Handler = async (event) => {
     // Try Twilio if configured; otherwise, log-only fallback
     ensureTwilio();
     try {
-      if (twilioClient && process.env.TWILIO_FROM) {
+      const fromNumber = process.env.TWILIO_FROM || '+19452454693';
+      if (twilioClient && fromNumber) {
         await twilioClient.messages.create({
           to: phone,
-          from: process.env.TWILIO_FROM,
+          from: fromNumber,
           body: `Your verification code is ${otp}`,
         });
       } else {

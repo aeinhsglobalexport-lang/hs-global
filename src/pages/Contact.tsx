@@ -63,7 +63,7 @@ const Contact = () => {
       setSubmitted(false);
       setIsSending(true);
       await sendEmail(
-        (import.meta as any).env.VITE_EMAILJS_TEMPLATE_CONTACT || 'template_contact',
+        (import.meta as any).env.VITE_EMAILJS_TEMPLATE_CONTACT || 'template_urhb0vg',
         {
           to_email: 'hsglobalexport@gmail.com',
           subject: 'New Contact Form Submission',
@@ -247,7 +247,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h4 className="text-lg font-medium text-gray-900 mb-2">Email</h4>
-                      <p className="text-gray-600">hsglobalexport@gmail.com</p>
+                      <a href="mailto:hsglobalexport@gmail.com" className="text-gray-600 hover:text-gray-900">hsglobalexport@gmail.com</a>
                     </div>
                   </div>
 
@@ -257,7 +257,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h4 className="text-lg font-medium text-gray-900 mb-2">Phone</h4>
-                      <p className="text-gray-600">+91 8107115116</p>
+                      <a href="tel:+918107115116" className="text-gray-600 hover:text-gray-900">+91 81071 15116</a>
                     </div>
                   </div>
 
@@ -268,15 +268,14 @@ const Contact = () => {
                     <div>
                       <h4 className="text-lg font-medium text-gray-900 mb-2">Location</h4>
                       <div className="space-y-3 text-gray-600">
-                        <p>
+                        <a href="https://www.google.com/maps/search/?api=1&query=C-108%2C%20Titanium%20Business%20Park%2C%20Makarba%2C%20Ahmedabad%20-%20380051" target="_blank" rel="noreferrer" className="block hover:underline">
                           <span className="font-medium">Corporate Office:</span><br />
                           C-108, Titanium Business Park,<br />
                           Makarba, Ahmedabad - 380051
-                        </p>
+                        </a>
                         <p>
                           <span className="font-medium">Factory:</span><br />
-                          Indra Puri Colony,<br />
-                          Behind Tanu Hotel,<br />
+                          Inania Complex, Nr. Maruti Showroom,<br />
                           Jalor, Rajasthan - 343001
                         </p>
                       </div>

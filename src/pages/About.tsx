@@ -135,12 +135,16 @@ const About = () => {
             viewport={{ once: true }}
             className="w-full px-4 md:px-8 lg:px-12"
           >
-            <span className="text-accent uppercase tracking-wider">
-              Premium Marble Collection
-            </span>
-            <h2 className="text-4xl font-bold mt-2 mb-6">Luxury Marble Solutions</h2>
+            <span className="text-accent uppercase tracking-wider">About HS Global Export</span>
+            <h2 className="text-4xl font-bold mt-2 mb-6">Granite & Marble Experts for Projects Worldwide</h2>
             <p className="text-gray-600 leading-relaxed mb-8">
-              HS Global Export is a leading supplier of premium marble varieties, specializing in the finest Italian marble including Carrara, Calacatta, and Statuario, each renowned for their distinctive veining patterns and sophisticated elegance. Our marble collection features an extensive range of colors and finishes, from classic white marble perfect for luxury interiors to exotic colored marble varieties that add dramatic flair to any space. We source our marble from the most prestigious quarries in Italy, Turkey, and India, ensuring exceptional quality and authenticity. Our state-of-the-art marble processing facilities utilize advanced cutting technology, precision polishing equipment, and specialized finishing techniques to create flawless marble slabs, tiles, and custom-cut pieces. Whether you're designing luxury kitchen countertops, elegant bathroom vanities, stunning flooring installations, or sophisticated architectural cladding, our marble products deliver unmatched beauty, durability, and timeless appeal. From residential projects to high-end commercial developments, HS Global Export provides premium marble solutions that transform spaces with natural elegance and superior craftsmanship.
+              HS Global Export delivers export‑grade granite, marble, sandstone, onyx and travertine with reliable sourcing, precision processing and on‑time logistics. From premium slabs and tiles to bespoke stone furniture, we support architects, builders and homeowners with consistent quality, competitive pricing and expert guidance across selection, finishes and installation.
+            </p>
+            <p className="text-gray-600 leading-relaxed mb-8">
+              Our catalogs cover kitchen countertops, bathroom vanities, flooring, wall cladding, staircases and exterior applications. Each slab is inspected for color harmony, structural integrity and polish. With strict QA, moisture and thickness checks, and professional packing, we ensure your stone arrives project‑ready anywhere in the world.
+            </p>
+            <p className="text-gray-600 leading-relaxed mb-8">
+              Looking for a specific shade or texture? Share your specification and we will shortlist active quarry lots with live photos and videos. We also offer edge profiling, water‑jet cutting, book‑matching and custom size calibration to simplify site work and reduce wastage.
             </p>
             
             {/* Full-width image */}

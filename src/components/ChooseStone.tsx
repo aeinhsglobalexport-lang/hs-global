@@ -98,8 +98,9 @@ const ChooseStone: React.FC = () => {
   const groups = useMemo(() => buildGroupsFromCollection(), []);
 
   const handleClick = (stone: StoneItem) => {
-    // Pass target product name and main stone category to improve matching/scrolling
-    navigate(`/products`, { state: { targetProduct: stone.name, targetCategory: 'slabs', targetMain: stone.category } });
+    // Ensure Onyx works like others; pass state and also set hash to main for fallback
+    const main = stone.category;
+    navigate(`/products#${main}`, { state: { targetProduct: stone.name, targetCategory: 'slabs', targetMain: main } });
   };
 
   return (

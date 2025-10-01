@@ -6,7 +6,7 @@ import { TopTabsNav } from './Navigation/TopTabsNav';
 import { categories, Subcategory, Product } from '../data/products';
 
 export const ProductsModernVariant: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('marble');
+  const [activeSection, setActiveSection] = useState('alaska');
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
   const [navDims, setNavDims] = useState<{ height: number; top: number; offsetTop?: number }>({ height: 0, top: 0, offsetTop: 0 });
   const [navForceFixed, setNavForceFixed] = useState(false);
@@ -112,18 +112,25 @@ export const ProductsModernVariant: React.FC = () => {
     };
   }, [heroRef]);
 
-  // Handle deep-link hash navigation and direct product targeting
+  // Handle deep-link hash navigation and direct product targeting, incl. ?cat=furniture
   useEffect(() => {
     const validSlabIds = new Set(['marble', 'granite', 'sandstone', 'onyx', 'travertine']);
 
     const navigateToHash = () => {
       const state = (location.state as any) || {};
       const rawState = (state?.target as string | undefined);
+      const params = new URLSearchParams(location.search || '');
+      const catParam = (params.get('cat') || '').toLowerCase();
       const rawHash = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
       const raw = (rawState || rawHash).toLowerCase();
       const targetProduct = (state?.targetProduct as string | undefined) || '';
       const targetCategory = (state?.targetCategory as string | undefined) || '';
       const targetMain = (state?.targetMain as string | undefined) || '';
+
+      // 1) Top category via query param
+      if (catParam === 'furniture' || catParam === 'slabs') {
+        if (activeCategory !== catParam) setActiveCategory(catParam);
+      }
 
       if (targetProduct) {
         // Ensure slabs visible
@@ -162,7 +169,26 @@ export const ProductsModernVariant: React.FC = () => {
         return;
       }
 
+      // If hash exists without product targeting
       if (!raw) return;
+
+      // 2) If furniture category selected (via ?cat or state), scroll to furniture subcategory hash
+      if (catParam === 'furniture' || targetCategory === 'furniture' || activeCategory === 'furniture') {
+        if (activeCategory !== 'furniture') setActiveCategory('furniture');
+        let attempts = 0;
+        const tick = () => {
+          const el = sectionRefs.current[raw];
+          if (el) {
+            scrollToSection(raw);
+            return;
+          }
+          if (attempts++ < 40) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(tick));
+        return;
+      }
+
+      // 3) Slabs main section hash (marble/granite/onyx/...)
       if (validSlabIds.has(raw)) {
         if (activeCategory !== 'slabs') setActiveCategory('slabs');
         requestAnimationFrame(() => {
@@ -170,7 +196,21 @@ export const ProductsModernVariant: React.FC = () => {
             scrollToSection(raw);
           });
         });
+        return;
       }
+
+      // 4) Any subcategory id inside slabs (e.g., granite group like 'alaska')
+      if (activeCategory !== 'slabs') setActiveCategory('slabs');
+      let tries = 0;
+      const tickAny = () => {
+        const el = sectionRefs.current[raw];
+        if (el) {
+          scrollToSection(raw);
+          return;
+        }
+        if (tries++ < 60) requestAnimationFrame(tickAny);
+      };
+      requestAnimationFrame(() => requestAnimationFrame(tickAny));
     };
 
     // Navigate on mount and when hash changes
@@ -178,7 +218,25 @@ export const ProductsModernVariant: React.FC = () => {
     const onHash = () => navigateToHash();
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
-  }, [activeCategory, navDims.height, location.state]);
+  }, [activeCategory, navDims.height, location.state, location.search]);
+
+  // If there is no hash or state, default to Granite -> Alaska on first paint
+  useEffect(() => {
+    if ((window.location.hash || '').length > 1) return;
+    const state = (location.state as any) || {};
+    if (state?.target || state?.targetProduct) return;
+    if (activeCategory !== 'slabs') setActiveCategory('slabs');
+    let tries = 0;
+    const tick = () => {
+      const el = sectionRefs.current['alaska'];
+      if (el) {
+        scrollToSection('alaska');
+        return;
+      }
+      if (tries++ < 60) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(tick));
+  }, [activeCategory, location.state]);
 
   // Preload hero image and add CSS for smooth fixed backgrounds
   useEffect(() => {

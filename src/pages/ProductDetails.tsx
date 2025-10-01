@@ -100,6 +100,7 @@ const ProductDetails = () => {
   // Related slider control + seamless infinite auto scroll (setInterval based)
   const relatedRef = useRef<HTMLDivElement | null>(null);
   const cardGapPxRef = useRef<number>(20); // gap-5 = ~20px
+  const autoSpeedRef = useRef<number>(2.9);
   const getCardStep = () => {
     const el = relatedRef.current;
     if (!el) return 300;
@@ -110,17 +111,31 @@ const ProductDetails = () => {
   const scrollRelated = (dir: "left" | "right") => {
     const el = relatedRef.current;
     if (!el) return;
-    const amount = getCardStep() * 2; // scroll two cards per click
+    // Stop auto scroll momentarily and jump by more cards to feel like skipping
+    const amount = relatedRef.current?.clientWidth ?? 600; // jump more cards per click
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    const original = autoSpeedRef.current;
+    autoSpeedRef.current = 0; // pause
+    window.setTimeout(() => { autoSpeedRef.current = original; }, 800);
+    // Wrap when reaching ends to simulate infinite
+    window.setTimeout(() => {
+      if (!el) return;
+      const half = el.scrollWidth / 2;
+      if (el.scrollLeft <= 0) {
+        el.scrollLeft += half;
+      } else if (el.scrollLeft >= half) {
+        el.scrollLeft -= half;
+      }
+    }, 320);
   };
   useEffect(() => {
     const el = relatedRef.current;
     if (!el) return;
     let px = 0;
-    const speed = 0.6; // pixels per tick (~60fps => ~36px/sec). Increase for faster.
+    const speed = 0.9; // dynamic speed
     const id = window.setInterval(() => {
       if (!el) return;
-      el.scrollLeft += speed;
+      el.scrollLeft += autoSpeedRef.current;
       const half = el.scrollWidth / 2; // because we render items twice
       if (el.scrollLeft >= half) {
         el.scrollLeft -= half; // seamless wrap
@@ -279,10 +294,10 @@ const ProductDetails = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold text-primary">Related Photos</h3>
           <div className="flex gap-2">
-            <button onClick={() => scrollRelated('left')} className="h-9 w-9 rounded-full bg-white/70 ring-1 ring-black/10 shadow flex items-center justify-center hover:bg-white">
+            <button onClick={() => scrollRelated('left')} className="h-9 w-9 rounded-full bg-white/90 ring-1 ring-black/20 shadow flex items-center justify-center hover:bg-white">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button onClick={() => scrollRelated('right')} className="h-9 w-9 rounded-full bg-white/70 ring-1 ring-black/10 shadow flex items-center justify-center hover:bg-white">
+            <button onClick={() => scrollRelated('right')} className="h-9 w-9 rounded-full bg-white/90 ring-1 ring-black/20 shadow flex items-center justify-center hover:bg-white">
               <ChevronRightIcon className="w-5 h-5" />
             </button>
           </div>

@@ -96,23 +96,48 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
     setError('');
     try {
       const full = `${selectedCountry.dialCode}${phoneNumber}`.replace(/\D/g, '');
-      const resp = await fetch('/api/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ phone: full })
-      });
-      let data: any = null;
+      const apiBase = (import.meta as any).env?.VITE_API_BASE || '';
+
+      const trySend = async (url: string) => {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ phone: full })
+        });
+        let data: any = null;
+        try {
+          const ct = resp.headers.get('content-type') || '';
+          data = ct.includes('application/json') ? await resp.json() : null;
+        } catch {
+          data = null;
+        }
+        if (!resp.ok || !data || data.ok !== true) {
+          const serverMsg = (data && (data.error || data.message)) || undefined;
+          throw new Error(serverMsg || 'Failed to send OTP');
+        }
+        return data;
+      };
+
+      let data = null;
+      // 1) Try local server proxy
       try {
-        const ct = resp.headers.get('content-type') || '';
-        data = ct.includes('application/json') ? await resp.json() : null;
-      } catch {
-        data = null;
+        data = await trySend('/api/otp/send');
+      } catch (e1) {
+        // 2) Try configured API base
+        if (apiBase) {
+          try {
+            data = await trySend(`${apiBase.replace(/\/$/, '')}/api/otp/send`);
+          } catch (e2) {
+            // 3) Try Netlify function fallback (dev)
+            data = await trySend('/.netlify/functions/send-otp');
+          }
+        } else {
+          // 3) Try Netlify function fallback (dev)
+          data = await trySend('/.netlify/functions/send-otp');
+        }
       }
-      if (!resp.ok || !data || data.ok !== true) {
-        const serverMsg = (data && (data.error || data.message)) || undefined;
-        throw new Error(serverMsg || 'Failed to send OTP');
-      }
-      setOtpToken(String(data.otpToken || ''));
+
+      setOtpToken(String((data as any).otpToken || ''));
       setStep('otp');
     } catch (err: any) {
       setError(err?.message || 'Failed to send OTP');
@@ -132,21 +157,40 @@ export const PhoneVerifyModal: React.FC<PhoneVerifyModalProps> = ({
     setError('');
     try {
       const full = `${selectedCountry.dialCode}${phoneNumber}`.replace(/\D/g, '');
-      const resp = await fetch('/api/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ phone: full, code: otp, otpToken })
-      });
-      let data: any = null;
+      const apiBase = (import.meta as any).env?.VITE_API_BASE || '';
+
+      const tryVerify = async (url: string) => {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ phone: full, code: otp, otpToken })
+        });
+        let data: any = null;
+        try {
+          const ct = resp.headers.get('content-type') || '';
+          data = ct.includes('application/json') ? await resp.json() : null;
+        } catch {
+          data = null;
+        }
+        if (!resp.ok || !data || data.ok !== true) {
+          const serverMsg = (data && (data.error || data.message)) || undefined;
+          throw new Error(serverMsg || 'Invalid code');
+        }
+        return data;
+      };
+
       try {
-        const ct = resp.headers.get('content-type') || '';
-        data = ct.includes('application/json') ? await resp.json() : null;
-      } catch {
-        data = null;
-      }
-      if (!resp.ok || !data || data.ok !== true) {
-        const serverMsg = (data && (data.error || data.message)) || undefined;
-        throw new Error(serverMsg || 'Invalid code');
+        await tryVerify('/api/otp/verify');
+      } catch (e1) {
+        if (apiBase) {
+          try {
+            await tryVerify(`${apiBase.replace(/\/$/, '')}/api/otp/verify`);
+          } catch (e2) {
+            await tryVerify('/.netlify/functions/verify-otp');
+          }
+        } else {
+          await tryVerify('/.netlify/functions/verify-otp');
+        }
       }
       setStep('success');
       setTimeout(() => {

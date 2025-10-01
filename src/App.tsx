@@ -42,20 +42,14 @@ function App() {
       phone: data.phone,
       requirements: data.requirements,
     };
-    import("@emailjs/browser").then(({ default: emailjs }) =>
-      emailjs
-        .send("service_cmjk7to", "template_sd79a3m", templateParams, {
-          publicKey: "6uDKMKXeL97orQgEW",
-        })
-        .then(
-          function (response) {
-            console.log("SUCCESS!", response.status, response.text);
-          },
-          function (err) {
-            console.log("FAILED...", err);
-          }
-        )
-    );
+    // Optionally send via EmailJS as well using shared helper
+    // import("@emailjs/browser").then(({ default: emailjs }) =>
+    //   emailjs
+    //     .send((import.meta as any).env.VITE_EMAILJS_SERVICE_ID || 'service_6byqj89', (import.meta as any).env.VITE_EMAILJS_TEMPLATE_POPUP || 'template_83tzsh9', templateParams, {
+    //       publicKey: (import.meta as any).env.VITE_EMAILJS_PUBLIC_KEY || 'xBA-VAyjd8xdlmmZu',
+    //     })
+    //     .catch(console.error)
+    // );
     console.log("Form submitted:", data);
     localStorage.setItem("hasSubmittedForm", "true");
     localStorage.setItem("userDetails", JSON.stringify(data));
