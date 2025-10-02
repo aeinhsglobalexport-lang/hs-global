@@ -80,7 +80,7 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
               idx === slideIndex ? 'opacity-100' : 'opacity-0'
             } ${product.category === 'slabs' ? 'scale-95 -translate-y-9 origin-center' : ''}`}
             loading={idx === 0 ? 'eager' : 'lazy'}
-            fetchPriority={idx === 0 ? 'high' : 'auto'}
+            fetchpriority={idx === 0 ? 'high' : 'auto'}
             decoding={idx === 0 ? 'sync' : 'async'}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
           />

@@ -9,14 +9,17 @@
     "dev:full": "concurrently \"npm:server\" \"npm:dev\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server.cjs",
+    "build:prod": "npm run build && npm run start",
+    "deploy": "npm run build"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "body-parser": "^1.20.2",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "framer-motion": "^11.0.3",
     "gsap": "^3.12.5",
@@ -24,7 +27,6 @@
     "locomotive-scroll": "^5.0.0-beta.11",
     "lokijs": "^1.5.12",
     "lucide-react": "^0.344.0",
-    "netlify": "^23.7.3",
     "razorpay": "^2.9.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

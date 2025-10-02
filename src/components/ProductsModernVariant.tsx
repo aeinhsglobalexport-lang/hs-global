@@ -131,6 +131,22 @@ export const ProductsModernVariant: React.FC = () => {
       if (catParam === 'furniture' || catParam === 'slabs') {
         if (activeCategory !== catParam) setActiveCategory(catParam);
       }
+      
+      // Handle furniture hash navigation specifically
+      if (catParam === 'furniture' && raw) {
+        if (activeCategory !== 'furniture') setActiveCategory('furniture');
+        let attempts = 0;
+        const tick = () => {
+          const el = sectionRefs.current[raw];
+          if (el) {
+            scrollToSection(raw);
+            return;
+          }
+          if (attempts++ < 40) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(() => requestAnimationFrame(tick));
+        return;
+      }
 
       if (targetProduct) {
         // Ensure slabs visible

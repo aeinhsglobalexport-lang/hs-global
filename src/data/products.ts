@@ -137,10 +137,14 @@ const buildFurnitureCategories = (): Subcategory[] => {
     }
   };
 
-  pushMain('Tables', ['Coffee Table', 'Console Table', 'Dining Table', 'Side Table']);
+  pushMain('Tables', ['Coffee Table', 'Console Table', 'Dining Table', 'Side Table', 'Center Table']);
   pushMain('Sculpture');
   pushMain('Water Fountain');
   pushMain('Wash Basins', ['Pedestal', 'Countertop']);
+  pushMain('Benches');
+  pushMain('Bowls');
+  pushMain('Flower Pots');
+  pushMain('Urli');
 
   return out;
 };

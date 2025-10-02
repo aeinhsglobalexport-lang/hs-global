@@ -62,7 +62,7 @@ export const QuarryExtractionLoader: React.FC = () => {
         </div>
       </div>
       
-      <style jsx>{`
+        <style>{`
         .animate-cutting-arm {
           animation: cuttingArm 3s ease-in-out infinite;
         }

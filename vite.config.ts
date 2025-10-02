@@ -23,9 +23,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // When running locally with `netlify dev`, proxy API requests to it
+      // Proxy API requests to our Express server
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },
@@ -33,9 +33,9 @@ export default defineConfig({
   },
   preview: {
     proxy: {
-      // For `vite preview`, forward API calls to `netlify dev` on 8888
+      // For `vite preview`, forward API calls to Express server
       '/api': {
-        target: 'http://localhost:8888',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       },

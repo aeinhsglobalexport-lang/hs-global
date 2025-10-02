@@ -97,60 +97,52 @@ const ProductDetails = () => {
     return () => clearInterval(t);
   }, [product.images.length]);
 
-  // Related slider control + seamless infinite auto scroll (setInterval based)
+  // Related slider control with proper button navigation
   const relatedRef = useRef<HTMLDivElement | null>(null);
-  const cardGapPxRef = useRef<number>(20); // gap-5 = ~20px
-  const autoSpeedRef = useRef<number>(2.9);
-  const getCardStep = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const slideWidth = 250; // Fixed width per card
+  const gap = 20;
+  
+  const scrollToSlide = (index: number) => {
     const el = relatedRef.current;
-    if (!el) return 300;
-    const first = el.querySelector<HTMLElement>("[data-rel-card]");
-    const w = first?.getBoundingClientRect().width ?? 280;
-    return Math.floor(w + cardGapPxRef.current);
+    if (!el) return;
+    const scrollPosition = index * (slideWidth + gap);
+    el.scrollTo({ left: scrollPosition, behavior: "smooth" });
+    setCurrentSlide(index);
   };
+
   const scrollRelated = (dir: "left" | "right") => {
-    const el = relatedRef.current;
-    if (!el) return;
-    // Stop auto scroll momentarily and jump by more cards to feel like skipping
-    const amount = relatedRef.current?.clientWidth ?? 600; // jump more cards per click
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
-    const original = autoSpeedRef.current;
-    autoSpeedRef.current = 0; // pause
-    window.setTimeout(() => { autoSpeedRef.current = original; }, 800);
-    // Wrap when reaching ends to simulate infinite
-    window.setTimeout(() => {
-      if (!el) return;
-      const half = el.scrollWidth / 2;
-      if (el.scrollLeft <= 0) {
-        el.scrollLeft += half;
-      } else if (el.scrollLeft >= half) {
-        el.scrollLeft -= half;
-      }
-    }, 320);
+    const maxSlides = product.relatedProducts.length;
+    if (maxSlides === 0) return;
+    
+    setIsAutoPlaying(false);
+    
+    let newIndex;
+    if (dir === "right") {
+      newIndex = (currentSlide + 1) % maxSlides;
+    } else {
+      newIndex = (currentSlide - 1 + maxSlides) % maxSlides;
+    }
+    
+    scrollToSlide(newIndex);
+    
+    // Resume auto-play after 3 seconds
+    setTimeout(() => setIsAutoPlaying(true), 3000);
   };
+
+  // Auto-scroll effect
   useEffect(() => {
-    const el = relatedRef.current;
-    if (!el) return;
-    let px = 0;
-    const speed = 0.9; // dynamic speed
-    const id = window.setInterval(() => {
-      if (!el) return;
-      el.scrollLeft += autoSpeedRef.current;
-      const half = el.scrollWidth / 2; // because we render items twice
-      if (el.scrollLeft >= half) {
-        el.scrollLeft -= half; // seamless wrap
-      }
-      px += speed;
-    }, 16);
-    const handleResize = () => {
-      cardGapPxRef.current = 20;
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    if (!isAutoPlaying || product.relatedProducts.length === 0) return;
+    
+    const interval = setInterval(() => {
+      const maxSlides = product.relatedProducts.length;
+      const nextIndex = (currentSlide + 1) % maxSlides;
+      scrollToSlide(nextIndex);
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, [currentSlide, isAutoPlaying, product.relatedProducts.length]);
 
   return (
     <div className="pt-20 min-h-screen">
@@ -303,14 +295,21 @@ const ProductDetails = () => {
           </div>
         </div>
         <div className="relative">
-          <div ref={relatedRef} className="flex gap-5 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-            {[...product.relatedProducts, ...product.relatedProducts].map((p, i) => (
+          <div 
+            ref={relatedRef} 
+            className="flex gap-5 overflow-x-auto pb-2 no-scrollbar scroll-smooth"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {product.relatedProducts.map((p, i) => (
               <Link
-                key={`${p.id}-${i}`}
+                key={p.id}
                 to={`/productsinfo/${p.id}`}
-                className="relative overflow-hidden group transition-transform duration-300 bg-white shadow-md hover: shrink-0 w-60"
-                style={{ aspectRatio: '3/4' }}
-                data-rel-card
+                className="relative overflow-hidden group transition-transform duration-300 bg-white shadow-md hover:shadow-lg shrink-0"
+                style={{ 
+                  width: `${slideWidth}px`, 
+                  aspectRatio: '3/4',
+                  scrollSnapAlign: 'start'
+                }}
               >
                 <img
                   src={p.image}
@@ -320,7 +319,7 @@ const ProductDetails = () => {
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-white/85 via-white/60 to-transparent">
                   <h4 className="text-sm font-semibold text-gray-900 -translate-y-2 text-center leading-snug">{p.name}</h4>
                   <div className="mt-2 flex justify-center">
-                    <span className="inline-flex px-20 py-2 text-xs font-semibold border border-gray-900 bg-gray-900 text-white hover:bg-white hover:text-gray-900 transition-colors duration-200 rounded-none">Details</span>
+                    <span className="inline-flex px-6 py-2 text-xs font-semibold border border-gray-900 bg-gray-900 text-white hover:bg-white hover:text-gray-900 transition-colors duration-200 rounded-none">Details</span>
                   </div>
                 </div>
               </Link>
