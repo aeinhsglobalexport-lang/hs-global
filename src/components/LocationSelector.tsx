@@ -17,8 +17,8 @@ const LANGUAGES = [
 ];
 
 const CURRENCIES = [
-  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
   { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },
   { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
@@ -28,6 +28,18 @@ const CURRENCIES = [
   { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
   { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
+  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
+  { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
 ];
 
 export const LocationSelector: React.FC = () => {
@@ -45,7 +57,7 @@ export const LocationSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
@@ -114,6 +126,9 @@ export const LocationSelector: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-blue-900">Detected Location</p>
                     <p className="text-sm text-blue-800 truncate">{location.countryName}</p>
+                    {location.city && (
+                      <p className="text-xs text-blue-700">{location.city}</p>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-// products.ts - FIXED VERSION with Console Tables and Benches
+// products.ts — FINAL (INR ONLY, no conversion here)
 
 export interface Product {
   id: string;
@@ -7,7 +7,7 @@ export interface Product {
   subcategory: string;
   image: string;
   description: string;
-  price?: string;
+  priceINR?: number;        // <-- INR only
   images?: string[];
   available?: boolean;
 }
@@ -25,96 +25,107 @@ export interface Subcategory {
   subcategories?: Subcategory[];
 }
 
-import generateSlabCategories from './slabs.loader';
-import { getFurnitureSpecs } from './furnitureSpecs';
+import generateSlabCategories from "./slabs.loader";
+import { getFurnitureSpecs } from "./furnitureSpecs";
 
-const furnitureFiles = import.meta.glob('/src/assets/furnitures/**/*.{webp,jpg,jpeg,png}', {
-  query: '?url',
-  import: 'default',
-  eager: true
-}) as Record<string, string>;
+const furnitureFiles = import.meta.glob(
+  "/src/assets/furnitures/**/*.{webp,jpg,jpeg,png}",
+  {
+    query: "?url",
+    import: "default",
+    eager: true,
+  }
+) as Record<string, string>;
 
-const decode = (s: string) => decodeURIComponent(s.replace(/\+/g, ' '));
-const toSlug = (s: string) => decode(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const decode = (s: string) => decodeURIComponent(s.replace(/\+/g, " "));
+const toSlug = (s: string) =>
+  decode(s)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 const toTitle = (s: string) =>
-  decode(s).replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
-
-const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  decode(s)
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
 
 const SUBCATEGORY_TO_PRODUCT_TYPE: Record<string, string> = {
-  'coffee table': 'Table',
-  'console table': 'Table',
-  'dining table': 'Table',
-  'side table': 'Table',
-  'center table': 'Table',
-  'pedestal': 'Wash Basin',
-  'countertop': 'Wash Basin',
-  'benches': 'Bench',
-  'flower pots': 'Flower Pot',
-  'water fountain': 'Water Fountain',
-  'bowls': 'Bowl',
-  'urli': 'Urli',
-  'sculpture': 'Sculpture'
+  "coffee table": "Table",
+  "console table": "Table",
+  "dining table": "Table",
+  "side table": "Table",
+  "center table": "Table",
+  pedestal: "Wash Basin",
+  countertop: "Wash Basin",
+  benches: "Bench",
+  "flower pots": "Flower Pot",
+  "water fountain": "Water Fountain",
+  bowls: "Bowl",
+  urli: "Urli",
+  sculpture: "Sculpture",
 };
 
-const getFurniturePriceFromSpecs = (
+// Extract INR pricing from furnitureSpecs
+const getFurniturePriceINR = (
   productName: string,
   subcategory: string
-): { price: string | undefined; available: boolean } => {
+): { priceINR: number | undefined; available: boolean } => {
+
   const specs = getFurnitureSpecs(productName);
-  
-  if (!specs) {
-    return { price: undefined, available: false };
+
+  if (!specs?.priceINR) {
+    return { priceINR: undefined, available: false };
   }
 
-  const expectedProductType = SUBCATEGORY_TO_PRODUCT_TYPE[normalize(subcategory)];
-  
-  if (expectedProductType && specs.product !== expectedProductType) {
-    return { price: undefined, available: false };
+  const expected = SUBCATEGORY_TO_PRODUCT_TYPE[normalize(subcategory)];
+  if (expected && specs.product !== expected) {
+    return { priceINR: undefined, available: false };
   }
 
-  const isAvailable = specs.price !== 'UNAVAILABLE' && specs.price !== undefined;
-  
   return {
-    price: isAvailable ? specs.price : undefined,
-    available: isAvailable
+    priceINR: specs.priceINR,
+    available: true,
   };
 };
 
-export const isProductAvailable = (productName: string, subcategory: string): boolean => {
-  const { available } = getFurniturePriceFromSpecs(productName, subcategory);
-  return available;
+export const isProductAvailable = (productName: string, subcategory: string) => {
+  return getFurniturePriceINR(productName, subcategory).available;
 };
 
+// Build furniture categories
 const buildFurnitureCategories = (): Subcategory[] => {
   type Agg = { id: string; name: string; images: string[]; image: string };
+
   const tree = new Map<string, Map<string | null, Map<string, Agg>>>();
 
-  Object.entries(furnitureFiles).forEach(([absPath, url]) => {
-    const parts = absPath.split('/').filter(Boolean);
-    const i = parts.indexOf('furnitures');
+  // group all furniture images
+  Object.entries(furnitureFiles).forEach(([path, url]) => {
+    const parts = path.split("/").filter(Boolean);
+    const i = parts.indexOf("furnitures");
     if (i === -1) return;
+
     const rawMain = parts[i + 1] ? decode(parts[i + 1]) : null;
-    const main = rawMain ? (/(wash\s*basins?|washbasins)/i.test(rawMain) ? 'Wash Basins' : toTitle(rawMain)) : null;
+    const main = rawMain
+      ? /(wash\s*basins?|washbasins)/i.test(rawMain)
+        ? "Wash Basins"
+        : toTitle(rawMain)
+      : null;
     if (!main) return;
 
     let sub: string | null = null;
     let product: string | null = null;
 
-    // Handle Tables and Wash Basins with subcategories
-    if ((main === 'Tables' || main === 'Wash Basins') && parts[i + 3]) {
+    if ((main === "Tables" || main === "Wash Basins") && parts[i + 3]) {
       sub = toTitle(parts[i + 2]);
       product = toTitle(parts[i + 3]);
-    } 
-    // Handle other categories (Benches, Flower Pots, etc.) - directly under main
-    else if (parts[i + 2]) {
+    } else if (parts[i + 2]) {
       sub = null;
       product = toTitle(parts[i + 2]);
-    } else {
-      return;
-    }
+    } else return;
 
-    const fileName = decode(parts[parts.length - 1]).trim();
+    const fileName = decode(parts.at(-1)!);
     if (!/\.(webp|jpg|jpeg|png)$/i.test(fileName)) return;
 
     if (!tree.has(main)) tree.set(main, new Map());
@@ -123,141 +134,131 @@ const buildFurnitureCategories = (): Subcategory[] => {
     const prodMap = subMap.get(sub)!;
 
     if (!prodMap.has(product!)) {
-      const id = ['furniture', main, sub || 'root', product!].map(toSlug).join('-');
-      prodMap.set(product!, { id, name: product!, images: [], image: '' });
+      const id =
+        ["furniture", main, sub || "root", product!].map(toSlug).join("-");
+      prodMap.set(product!, { id, name: product!, images: [], image: "" });
     }
+
     const agg = prodMap.get(product!)!;
     if (!agg.images.includes(url)) agg.images.push(url);
   });
 
-  // Select primary image
-  tree.forEach((subMap) => {
+  // choose main image
+  tree.forEach((subMap) =>
     subMap.forEach((prodMap) => {
-      const arr = Array.from(prodMap.values());
-      arr.forEach(p => {
-        p.image = p.images.find(i => /stand|cover|main|01|1\./i.test(i)) || p.images[0] || '';
+      const arr = [...prodMap.values()];
+      arr.forEach((p) => {
+        p.image =
+          p.images.find((i) => /1\.|01|main|cover|stand/i.test(i)) ||
+          p.images[0] ||
+          "";
       });
       prodMap.clear();
-      arr.forEach(p => prodMap.set(p.name, p));
-    });
-  });
+      arr.forEach((p) => prodMap.set(p.name, p));
+    })
+  );
 
-  const out: Subcategory[] = [];
+  const result: Subcategory[] = [];
 
   const pushMain = (main: string, children?: string[]) => {
     const subMap = tree.get(main);
     if (!subMap) return;
-    
-    if (children && children.length) {
-      // Has subcategories
+
+    if (children?.length) {
       const subs: Subcategory[] = [];
-      children.forEach((childName) => {
-        const prodMap = subMap.get(toTitle(childName)) || new Map<string, Agg>();
-        const products = Array.from(prodMap.values()).map<Product>((p) => {
-          const { price, available } = getFurniturePriceFromSpecs(p.name, childName);
-          
+
+      children.forEach((child) => {
+        const prodMap = subMap.get(toTitle(child)) || new Map();
+
+        const products = [...prodMap.values()].map<Product>((p) => {
+          const { priceINR, available } = getFurniturePriceINR(p.name, child);
+
           return {
             id: p.id,
             name: p.name,
-            category: 'furniture',
-            subcategory: childName,
+            category: "furniture",
+            subcategory: child,
             image: p.image,
             images: p.images,
-            description: `${p.name} - ${childName}`,
-            price: price,
-            available: available
+            description: `${p.name} - ${child}`,
+            priceINR,
+            available,
           };
         });
-        if (products.length) subs.push({ id: toSlug(childName), name: childName, products });
+
+        if (products.length)
+          subs.push({ id: toSlug(child), name: child, products });
       });
-      if (subs.length) out.push({ id: toSlug(main), name: main, subcategories: subs });
+
+      if (subs.length)
+        result.push({ id: toSlug(main), name: main, subcategories: subs });
+
     } else {
-      // No subcategories - products directly under main category
-      const prodMap = subMap.get(null) || new Map<string, Agg>();
-      const products = Array.from(prodMap.values()).map<Product>((p) => {
-        const { price, available } = getFurniturePriceFromSpecs(p.name, main);
+      const prodMap = subMap.get(null) || new Map();
+
+      const products = [...prodMap.values()].map<Product>((p) => {
+        const { priceINR, available } = getFurniturePriceINR(p.name, main);
+
         return {
           id: p.id,
           name: p.name,
-          category: 'furniture',
+          category: "furniture",
           subcategory: main,
           image: p.image,
           images: p.images,
           description: `${p.name} - ${main}`,
-          price: price,
-          available: available
+          priceINR,
+          available,
         };
       });
-      if (products.length) {
-        out.push({ id: toSlug(main), name: main, products });
-      }
+
+      if (products.length)
+        result.push({ id: toSlug(main), name: main, products });
     }
   };
 
-  // Push in custom order - FIXED to include Console Tables and others
-  pushMain('Tables', ['Coffee Table', 'Console Table', 'Dining Table', 'Side Table', 'Center Table']);
-  pushMain('Wash Basins', ['Pedestal', 'Countertop']);
-  pushMain('Benches'); // No subcategories
-  pushMain('Flower Pots'); // No subcategories
-  pushMain('Water Fountain'); // No subcategories
-  pushMain('Bowls'); // No subcategories
-  pushMain('Urli'); // No subcategories
-  pushMain('Sculptures'); // No subcategories
-  pushMain('Others'); // No subcategories
+  pushMain("Tables", [
+    "Coffee Table",
+    "Console Table",
+    "Dining Table",
+    "Side Table",
+    "Center Table",
+  ]);
+  pushMain("Wash Basins", ["Pedestal", "Countertop"]);
+  pushMain("Benches");
+  pushMain("Flower Pots");
+  pushMain("Water Fountain");
+  pushMain("Bowls");
+  pushMain("Urli");
+  pushMain("Sculptures");
+  pushMain("Others");
 
-  return out;
+  return result;
 };
 
 export const categories: Category[] = [
   {
-    id: 'furniture',
-    name: 'Furniture',
+    id: "furniture",
+    name: "Furniture",
     subcategories: buildFurnitureCategories(),
   },
   {
-    id: 'slabs',
-    name: 'Slabs',
+    id: "slabs",
+    name: "Slabs",
     subcategories: generateSlabCategories(),
-  }
+  },
 ];
 
 export const getAllProducts = (): Product[] => {
-  const allProducts: Product[] = [];
+  const out: Product[] = [];
 
-  const extractProducts = (subcategories: Subcategory[]) => {
-    subcategories.forEach(subcategory => {
-      if (subcategory.products) {
-        allProducts.push(...subcategory.products);
-      }
-      if (subcategory.subcategories) {
-        extractProducts(subcategory.subcategories);
-      }
+  const extract = (subs: Subcategory[]) => {
+    subs.forEach((s) => {
+      if (s.products) out.push(...s.products);
+      if (s.subcategories) extract(s.subcategories);
     });
   };
 
-  categories.forEach(category => {
-    extractProducts(category.subcategories);
-  });
-
-  return allProducts;
-};
-
-export const getProductsByCategory = (categoryId: string): Product[] => {
-  const category = categories.find(cat => cat.id === categoryId);
-  if (!category) return [];
-
-  const products: Product[] = [];
-  const extractProducts = (subcategories: Subcategory[]) => {
-    subcategories.forEach(subcategory => {
-      if (subcategory.products) {
-        products.push(...subcategory.products);
-      }
-      if (subcategory.subcategories) {
-        extractProducts(subcategory.subcategories);
-      }
-    });
-  };
-
-  extractProducts(category.subcategories);
-  return products;
+  categories.forEach((c) => extract(c.subcategories));
+  return out;
 };

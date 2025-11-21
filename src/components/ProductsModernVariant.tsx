@@ -407,10 +407,96 @@ export const ProductsModernVariant: React.FC = () => {
           }
         }
 
-        if (!raw) {
-          programmaticScrollRef.current = false;
-          return;
-        }
+        useEffect(() => {
+          const savedY = sessionStorage.getItem("scrollY");
+          if (savedY) return;
+          if (programmaticScrollRef.current) return;
+        
+          const validSlabIds = new Set(["marble", "granite", "sandstone", "onyx", "travertine"]);
+        
+          const navigateToHashOrState = () => {
+            programmaticScrollRef.current = true;
+        
+            const state = (location.state as any) || {};
+            const rawState = (state?.target as string) || "";
+            const params = new URLSearchParams(location.search || "");
+            const catParam = (params.get("cat") || "").toLowerCase();
+        
+            const rawHash = (window.location.hash || "").replace(/^#/, "").trim().toLowerCase();
+            const raw = (rawState || rawHash).toLowerCase();
+        
+            // 1. Apply category from URL
+            if (catParam === "furniture" || catParam === "slabs") {
+              if (activeCategory !== catParam) {
+                setActiveCategory(catParam);
+              }
+            }
+        
+            const attemptScrollTo = (targetId: string, tries = 60): Promise<boolean> =>
+              new Promise((resolve) => {
+                let attempts = 0;
+                const tick = () => {
+                  const el = sectionRefs.current[targetId];
+                  if (el) {
+                    scrollToSection(targetId);
+                    resolve(true);
+                    return;
+                  }
+                  if (attempts++ < tries) requestAnimationFrame(tick);
+                  else resolve(false);
+                };
+                requestAnimationFrame(tick);
+              });
+        
+            (async () => {
+              // Priority 1 → Direct product link via state
+              const productName = (state?.targetProduct as string)?.toLowerCase().trim();
+              if (productName) {
+                const match = allSubcategories.find((s) =>
+                  (s.products || []).some((p) => p.name.toLowerCase() === productName)
+                );
+                if (match) {
+                  await attemptScrollTo(match.id, 40);
+                  programmaticScrollRef.current = false;
+                  return;
+                }
+              }
+        
+              // Priority 2 → URL hash (#marble)
+              if (raw) {
+                // If it is slabs subcategory
+                if (validSlabIds.has(raw)) {
+                  if (activeCategory !== "slabs") setActiveCategory("slabs");
+                  await attemptScrollTo(raw, 50);
+                  programmaticScrollRef.current = false;
+                  return;
+                }
+        
+                // Otherwise furniture section
+                if (activeCategory !== "furniture") setActiveCategory("furniture");
+                const ok = await attemptScrollTo(raw, 40);
+                if (ok) {
+                  programmaticScrollRef.current = false;
+                  return;
+                }
+              }
+        
+              // Priority 3 → Default to first section of active category
+              const firstId = categoryFilteredSubcategories[0]?.id;
+              if (firstId) {
+                await attemptScrollTo(firstId, 60);
+              }
+        
+              programmaticScrollRef.current = false;
+            })();
+          };
+        
+          navigateToHashOrState();
+          const onHash = () => navigateToHashOrState();
+          window.addEventListener("hashchange", onHash);
+          return () => window.removeEventListener("hashchange", onHash);
+        }, [location.state, location.search, activeCategory, allSubcategories, scrollToSection, categoryFilteredSubcategories]);
+        
 
         if (validSlabIds.has(raw)) {
           if (activeCategory !== "slabs") setActiveCategory("slabs");
