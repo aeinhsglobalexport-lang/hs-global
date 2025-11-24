@@ -30,6 +30,18 @@ function toTitle(text: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Helper to get best quality image for a product
+function getBestImage(paths: string[]): string {
+  if (paths.length === 0) return "";
+  
+  // Priority: Stand images first (usually higher quality close-ups)
+  const standImages = paths.filter(p => p.toLowerCase().includes("/stand/"));
+  if (standImages.length > 0) return standImages[0];
+  
+  // Otherwise, return first available
+  return paths[0];
+}
+
 function buildGroupsFromCollection(): StoneGroup[] {
   const mainCategories: { key: MainCategory; folder: string; title: string }[] = [
     { key: "marble", folder: "Marble", title: "Marble" },
@@ -42,7 +54,8 @@ function buildGroupsFromCollection(): StoneGroup[] {
   const result: StoneGroup[] = [];
 
   for (const cat of mainCategories) {
-    const representativeByProduct = new Map<string, string>();
+    // Store ALL images for each product to select the best one
+    const imagesByProduct = new Map<string, string[]>();
 
     Object.entries(collectionFiles).forEach(([absPath, url]) => {
       const idx = absPath.indexOf("/Collection/");
@@ -56,21 +69,16 @@ function buildGroupsFromCollection(): StoneGroup[] {
       const product = cat.folder === 'Granite' ? (parts[2] || '') : (parts[1] || '');
       if (!product) return;
 
-      const current = representativeByProduct.get(product);
-      const candidate = url;
-      const isStand = absPath.toLowerCase().includes("/stand/");
-      
-      if (!current) {
-        representativeByProduct.set(product, candidate);
-      } else if (isStand) {
-        representativeByProduct.set(product, candidate);
+      if (!imagesByProduct.has(product)) {
+        imagesByProduct.set(product, []);
       }
+      imagesByProduct.get(product)!.push(url);
     });
 
-    const items: StoneItem[] = Array.from(representativeByProduct.entries()).map(([product, image], idx) => ({
+    const items: StoneItem[] = Array.from(imagesByProduct.entries()).map(([product, images], idx) => ({
       id: `${cat.key}-${idx}`,
       name: toTitle(product),
-      image,
+      image: getBestImage(images),
       category: cat.key,
     }));
 
@@ -100,8 +108,8 @@ const ChooseStone: React.FC = () => {
     
     const navigationState = { 
       targetProduct: stone.name,
-      targetMain: 'slabs', // This should ALWAYS be 'slabs'
-      targetSubcategory: stone.category, // This is marble/granite/etc
+      targetMain: 'slabs',
+      targetSubcategory: stone.category,
       targetCategory: 'slabs'
     };
     
@@ -126,8 +134,8 @@ const ChooseStone: React.FC = () => {
     });
     
     const navigationState = { 
-      targetMain: 'slabs', // ⭐ FIXED: Always use 'slabs' as the main category
-      targetSubcategory: categoryKey, // ⭐ ADDED: Store the subcategory
+      targetMain: 'slabs',
+      targetSubcategory: categoryKey,
       targetCategory: 'slabs'
     };
     
@@ -173,15 +181,21 @@ const ChooseStone: React.FC = () => {
                     className="group flex flex-col items-center text-center min-w-0"
                     aria-label={`View ${stone.name} products`}
                   >
-                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
+                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shadow-sm mb-2 border-2 border-black">
                       <img
                         src={stone.image}
                         alt={stone.name}
-                        className="w-full h-full object-cover transform scale-[2.00] group-hover:scale-[2.10] transition-transform duration-500"
+                        className="min-w-full min-h-full w-auto h-auto max-w-none object-cover transform scale-100 group-hover:scale-105 transition-transform duration-500"
+                        style={{ 
+                          imageRendering: '-webkit-optimize-contrast',
+                          backfaceVisibility: 'hidden',
+                          transform: 'translateZ(0)',
+                        }}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = DEMO_IMG;
                         }}
                         loading="lazy"
+                        fetchpriority="high"
                       />
                     </span>
                     <span className="text-xs md:text-sm text-gray-700 group-hover:text-primary font-medium">
@@ -216,15 +230,21 @@ const ChooseStone: React.FC = () => {
                     className="group flex flex-col items-center text-center min-w-0"
                     aria-label={`View ${stone.name} products`}
                   >
-                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-sm mb-2 border-2 border-black">
+                    <span className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 shadow-sm mb-2 border-2 border-black">
                       <img
                         src={stone.image}
                         alt={stone.name}
-                        className="w-full h-full object-cover transform scale-[2.00] group-hover:scale-[2.10] transition-transform duration-500"
+                        className="min-w-full min-h-full w-auto h-auto max-w-none object-cover transform scale-100 group-hover:scale-105 transition-transform duration-500"
+                        style={{ 
+                          imageRendering: '-webkit-optimize-contrast',
+                          backfaceVisibility: 'hidden',
+                          transform: 'translateZ(0)',
+                        }}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = DEMO_IMG;
                         }}
                         loading="lazy"
+                        fetchpriority="high"
                       />
                     </span>
                     <span className="text-xs md:text-sm text-gray-700 group-hover:text-primary font-medium">

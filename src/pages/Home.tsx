@@ -57,7 +57,7 @@ const Home = () => {
         <meta property="og:description" content="Transform your interiors with HS Global Export's granite and marble collection. Unique designs and premium materials for luxurious living spaces." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.hsglobalexport.com/products" />
-        <meta property="og:image" content="https://www.hsglobalexport.com/public/banner/banner1.jpg" />
+        <meta property="og:image" content="https://www.hsglobalexport.com/public/banner.webp" />
         <link rel="canonical" href="https://www.hsglobalexport.com/" />
 
         {/* ✅ Optional extra SEO meta */}

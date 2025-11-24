@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Menu } from 'lucide-react';
 import { categories, Subcategory } from '../../data/products';
 
 interface TopTabsNavProps {
@@ -13,9 +13,9 @@ interface TopTabsNavProps {
 }
 
 export const TopTabsNav: React.FC<TopTabsNavProps> = ({ 
-  activeSection, 
-  onSectionClick, 
-  onMeasure, 
+  activeSection,
+  onSectionClick,
+  onMeasure,
   forceFixed,
   activeCategory,
   onCategoryChange,
@@ -24,17 +24,13 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
   const subNavRef = useRef<HTMLDivElement | null>(null);
   const [selectedChildren, setSelectedChildren] = useState<Record<string, string>>({});
   const [expandedParentId, setExpandedParentId] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSubcategoryOpen, setMobileSubcategoryOpen] = useState(false);
 
   const activeCategoryObj = useMemo(() => 
     categories.find(c => c.id === activeCategory), 
     [activeCategory]
   );
-
-  // Reset expanded parent and selected children when category changes
-  useEffect(() => {
-    setExpandedParentId(null);
-    setSelectedChildren({});
-  }, [activeCategory]);
 
   const firstLevelSubs = useMemo(() => {
     if (!activeCategoryObj) return [];
@@ -86,6 +82,14 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
     }
   }, [activeSection, childToParent]);
 
+  // Reset states when category changes
+  useEffect(() => {
+    setExpandedParentId(null);
+    setSelectedChildren({});
+    setMobileMenuOpen(false);
+    setMobileSubcategoryOpen(false);
+  }, [activeCategory]);
+
   // Report dimensions
   useEffect(() => {
     const el = rootRef.current;
@@ -123,8 +127,12 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
   const handleSubcategoryClick = useCallback((subcategory: typeof firstLevelSubs[0]) => {
     if (!subcategory.hasChildren) {
       onSectionClick(subcategory.id);
-      scrollToElement(subcategory.id);
       setExpandedParentId(null);
+      setMobileSubcategoryOpen(false);
+      // Delay scroll to allow menu to close first
+      setTimeout(() => {
+        scrollToElement(subcategory.id);
+      }, 100);
     } else {
       setExpandedParentId(prev => prev === subcategory.id ? null : subcategory.id);
     }
@@ -134,17 +142,19 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
     setSelectedChildren(prev => ({ ...prev, [parentId]: childId }));
     onSectionClick(childId);
     setExpandedParentId(null);
-    scrollToElement(childId);
+    setMobileSubcategoryOpen(false);
+    // Delay scroll to allow menu to close first
+    setTimeout(() => {
+      scrollToElement(childId);
+    }, 100);
   }, [onSectionClick, scrollToElement]);
 
-  // Category change - delegate entirely to parent
   const handleCategoryChange = useCallback((categoryId: string) => {
     if (categoryId === activeCategory) return;
-    
-    // Just call parent handler - it manages URL and state
     onCategoryChange(categoryId);
     setExpandedParentId(null);
     setSelectedChildren({});
+    setMobileMenuOpen(false);
   }, [activeCategory, onCategoryChange]);
 
   const getDisplayName = useCallback((subcategory: typeof firstLevelSubs[0]) => {
@@ -157,6 +167,12 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
     }
     return subcategory.name;
   }, [selectedChildren]);
+
+  const currentSubcategory = useMemo(() => {
+    return firstLevelSubs.find(s => 
+      s.id === activeSection || s.children?.some((c: any) => c.id === activeSection)
+    ) || firstLevelSubs[0];
+  }, [firstLevelSubs, activeSection]);
 
   return (
     <motion.div
@@ -171,97 +187,227 @@ export const TopTabsNav: React.FC<TopTabsNavProps> = ({
       initial={false}
     >
       <div className="container mx-auto px-4 md:px-6">
-        {/* Main Categories */}
-        <div className="flex justify-center py-3 md:py-4">
-          <div className="inline-flex items-center gap-1 md:gap-2 bg-white rounded-full p-1 shadow-inner border-2 border-black">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategoryChange(category.id)}
-                className={`px-3 md:px-6 py-2 rounded-full text-sm md:text-base font-semibold tracking-wide transition-colors duration-150 ${
-                  activeCategory === category.id
-                    ? 'bg-black text-white border-2 border-black'
-                    : 'text-black hover:text-white hover:bg-black border-2 border-transparent hover:border-black'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Subcategories */}
-        {firstLevelSubs.length > 0 && (
-          <div className="pb-3 md:pb-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="relative flex-1 overflow-hidden">
-                <div
-                  ref={subNavRef}
-                  className="overflow-x-auto overflow-y-visible scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pb-2"
+        {/* DESKTOP/TABLET VIEW (md and up) - Original Design */}
+        <div className="hidden md:block">
+          {/* Main Categories */}
+          <div className="flex justify-center py-3 md:py-4">
+            <div className="inline-flex items-center gap-1 md:gap-2 bg-white rounded-full p-1 shadow-inner border-2 border-black">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category.id)}
+                  className={`px-3 md:px-6 py-2 rounded-full text-sm md:text-base font-semibold tracking-wide transition-colors duration-150 ${
+                    activeCategory === category.id
+                      ? 'bg-black text-white border-2 border-black'
+                      : 'text-black hover:text-white hover:bg-black border-2 border-transparent hover:border-black'
+                  }`}
                 >
-                  <div className="flex flex-nowrap gap-2 px-1 md:flex-nowrap md:justify-start">
-                    {firstLevelSubs.map((subcategory) => {
-                      const isActive =
-                        activeSection === subcategory.id ||
-                        subcategory.children?.some(child => child.id === activeSection);
-                      return (
-                        <div key={subcategory.id} className="relative flex-shrink-0">
-                          <button
-                            onClick={() => handleSubcategoryClick(subcategory)}
-                            className={`px-3 md:px-4 py-2 text-sm md:text-sm font-medium rounded-full transition-colors duration-150 whitespace-nowrap border-2 backdrop-blur flex items-center gap-2 min-w-[8rem] max-w-[12rem] ${
-                              isActive
-                                ? 'bg-black text-white border-black shadow-md'
-                                : 'text-black border-black hover:text-white hover:bg-black bg-white'
-                            }`}
-                          >
-                            <span className="truncate max-w-[200px] md:max-w-none">
-                              {getDisplayName(subcategory)}
-                            </span>
-                            {subcategory.hasChildren && (
-                              <ChevronDown
-                                className={`h-3 w-3 md:h-4 md:w-4 transition-transform ${
-                                  expandedParentId === subcategory.id ? 'rotate-180' : ''
-                                }`}
-                              />
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Subcategories */}
+          {firstLevelSubs.length > 0 && (
+            <div className="pb-3 md:pb-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="relative flex-1 overflow-hidden">
+                  <div
+                    ref={subNavRef}
+                    className="overflow-x-auto overflow-y-visible scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pb-2"
+                  >
+                    <div className="flex flex-nowrap gap-2 px-1 md:flex-nowrap md:justify-start">
+                      {firstLevelSubs.map((subcategory) => {
+                        const isActive =
+                          activeSection === subcategory.id ||
+                          subcategory.children?.some(child => child.id === activeSection);
+                        return (
+                          <div key={subcategory.id} className="relative flex-shrink-0">
+                            <button
+                              onClick={() => handleSubcategoryClick(subcategory)}
+                              className={`px-3 md:px-4 py-2 text-sm md:text-sm font-medium rounded-full transition-colors duration-150 whitespace-nowrap border-2 backdrop-blur flex items-center gap-2 min-w-[8rem] max-w-[12rem] ${
+                                isActive
+                                  ? 'bg-black text-white border-black shadow-md'
+                                  : 'text-black border-black hover:text-white hover:bg-black bg-white'
+                              }`}
+                            >
+                              <span className="truncate max-w-[200px] md:max-w-none">
+                                {getDisplayName(subcategory)}
+                              </span>
+                              {subcategory.hasChildren && (
+                                <ChevronDown
+                                  className={`h-3 w-3 md:h-4 md:w-4 transition-transform ${
+                                    expandedParentId === subcategory.id ? 'rotate-180' : ''
+                                  }`}
+                                />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Expanded children */}
-      {expandedParentId && (
-        <div className="border-t border-black/10 bg-white">
-          <div className="container mx-auto px-4 md:px-6 py-2 md:py-3">
-            {firstLevelSubs
-              .filter(s => s.id === expandedParentId)
-              .map(parent => (
-                <div key={parent.id} className="flex flex-wrap gap-2 mt-2">
-                  {parent.children.map(child => (
+          {/* Expanded children - Desktop */}
+          {expandedParentId && (
+            <div className="border-t border-black/10 bg-white">
+              <div className="container mx-auto px-4 md:px-6 py-2 md:py-3">
+                {firstLevelSubs
+                  .filter(s => s.id === expandedParentId)
+                  .map(parent => (
+                    <div key={parent.id} className="flex flex-wrap gap-2 mt-2">
+                      {parent.children.map(child => (
+                        <button
+                          key={child.id}
+                          onClick={() => handleChildSelection(parent.id, child.id)}
+                          className={`px-3 py-1.5 rounded-full border-2 border-black text-sm md:text-base min-w-[100px] text-center transition-colors duration-150 ${
+                            activeSection === child.id
+                              ? 'bg-black text-white'
+                              : 'bg-white text-black hover:bg-black hover:text-white'
+                          }`}
+                        >
+                          {child.name}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* MOBILE VIEW (below md) - New Design */}
+        <div className="md:hidden">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between py-3 gap-3">
+            {/* Category Selector */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded-full font-semibold text-sm flex-1 justify-between"
+            >
+              <span className="truncate">{activeCategoryObj?.name || 'Select Category'}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${mobileMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Subcategory Selector */}
+            {firstLevelSubs.length > 0 && (
+              <button
+                onClick={() => setMobileSubcategoryOpen(!mobileSubcategoryOpen)}
+                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full font-medium text-sm flex-1 justify-between border-2 border-black"
+              >
+                <span className="truncate">
+                  {currentSubcategory ? getDisplayName(currentSubcategory) : 'Subcategory'}
+                </span>
+                <Menu className="h-4 w-4 flex-shrink-0" />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Category Menu */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden bg-white border-t border-black/10"
+              >
+                <div className="py-2 space-y-1">
+                  {categories.map((category) => (
                     <button
-                      key={child.id}
-                      onClick={() => handleChildSelection(parent.id, child.id)}
-                      className={`px-3 py-1.5 rounded-full border-2 border-black text-sm md:text-base min-w-[100px] text-center transition-colors duration-150 ${
-                        activeSection === child.id
+                      key={category.id}
+                      onClick={() => handleCategoryChange(category.id)}
+                      className={`w-full text-left px-4 py-3 font-medium transition-colors ${
+                        activeCategory === category.id
                           ? 'bg-black text-white'
-                          : 'bg-white text-black hover:bg-black hover:text-white'
+                          : 'text-black hover:bg-gray-100'
                       }`}
                     >
-                      {child.name}
+                      {category.name}
                     </button>
                   ))}
                 </div>
-              ))}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Mobile Subcategory Menu */}
+          <AnimatePresence>
+            {mobileSubcategoryOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden bg-white border-t border-black/10"
+              >
+                <div className="py-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  {firstLevelSubs.map((subcategory) => {
+                    const isActive =
+                      activeSection === subcategory.id ||
+                      subcategory.children?.some(child => child.id === activeSection);
+                    
+                    return (
+                      <div key={subcategory.id}>
+                        <button
+                          onClick={() => handleSubcategoryClick(subcategory)}
+                          className={`w-full text-left px-4 py-3 font-medium transition-colors flex items-center justify-between ${
+                            isActive
+                              ? 'bg-black text-white'
+                              : 'text-black hover:bg-gray-100'
+                          }`}
+                        >
+                          <span>{subcategory.name}</span>
+                          {subcategory.hasChildren && (
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${
+                                expandedParentId === subcategory.id ? 'rotate-180' : ''
+                              }`}
+                            />
+                          )}
+                        </button>
+
+                        {/* Child items for mobile */}
+                        <AnimatePresence>
+                          {expandedParentId === subcategory.id && subcategory.children.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.15 }}
+                              className="bg-gray-50 overflow-hidden"
+                            >
+                              {subcategory.children.map(child => (
+                                <button
+                                  key={child.id}
+                                  onClick={() => handleChildSelection(subcategory.id, child.id)}
+                                  className={`w-full text-left px-8 py-2.5 text-sm transition-colors ${
+                                    activeSection === child.id
+                                      ? 'bg-black text-white font-medium'
+                                      : 'text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {child.name}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+      </div>
     </motion.div>
   );
 };

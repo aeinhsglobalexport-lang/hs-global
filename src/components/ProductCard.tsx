@@ -1,4 +1,5 @@
 // ProductCard.tsx - Request Quote for Slabs, Add to Cart for Furniture
+// Fixed version - Handles both furniture and slabs images correctly
 
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { motion } from 'framer-motion';
@@ -15,76 +16,109 @@ import { useLocalization } from '../contexts/LocalizationContext';
 import { getFurnitureSpecs } from '../data/furnitureSpecs';
 import { getImageUrl } from "../data/slabs.loader";
 
-interface ProductCardProps {
-  product: Product;
-  variant: 'modern' | 'luxury' | 'industrial' | 'elegant';
-  index: number;
-}
+// Load all videos using Vite's glob import
+const videoFiles = import.meta.glob(
+  '/public/videos/**/*.mp4',
+  { eager: true, import: 'default' }
+) as Record<string, string>;
 
+// Normalize name helper
 const normalizeName = (name: string) =>
   name.replace(/[^a-z0-9\s]/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
-const getProductVideoUrl = (productName: string, category: string, subcategory: string) => {
+/* ---- VIDEO MATCHING ---- */
+const findVideoUrl = (productName: string, category: string, subcategory: string): string | null => {
   if (category !== 'furniture') return null;
-  const folderProduct = normalizeName(productName);
-  const folderSub = normalizeName(subcategory);
-  if (subcategory.toLowerCase().includes('table')) {
-    return `/videos/Tables/${folderSub}/${folderProduct}/video.mp4`;
+  
+  const normalizedProduct = normalizeName(productName).toLowerCase();
+  const normalizedSub = normalizeName(subcategory).toLowerCase();
+  
+  for (const [path, url] of Object.entries(videoFiles)) {
+    const lowerPath = path.toLowerCase();
+    if (lowerPath.includes(normalizedProduct) && lowerPath.includes(normalizedSub)) {
+      return url;
+    }
   }
-  if (subcategory.toLowerCase().includes('pedestal') || subcategory.toLowerCase().includes('countertop')) {
-    return `/videos/Wash Basins/${folderSub}/${folderProduct}/video.mp4`;
+  
+  // fallback cleaning
+  const cleanProduct = normalizedProduct.replace(/[^a-z0-9]/g, '');
+  const cleanSub = normalizedSub.replace(/[^a-z0-9]/g, '');
+  
+  for (const [path, url] of Object.entries(videoFiles)) {
+    const cleanPath = path.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanPath.includes(cleanProduct) && cleanPath.includes(cleanSub)) {
+      return url;
+    }
   }
-  return `/videos/${folderSub}/${folderProduct}/video.mp4`;
+  
+  return null;
 };
 
-const sortImagesByPriority = (images: string[], category: string): string[] => {
-  if (category !== 'furniture') {
-    const stand = images.filter(img => img.toLowerCase().includes('stand'));
-    const others = images.filter(img => !img.toLowerCase().includes('stand'));
-    return [...stand, ...others];
+/* ---- IMAGE SORTING FOR FURNITURE ---- */
+const sortImagesByPriority = (
+  images: { url?: string; path?: string }[],
+  category: string
+): string[] => {
+
+  if (!Array.isArray(images)) return [];
+
+  const valid = images.filter(img => img && typeof img.url === "string");
+
+  if (category === "furniture") {
+    const first = valid
+      .filter(img => img.path?.toLowerCase?.().includes("/first/"))
+      .map(img => img.url!);
+
+    const others = valid
+      .filter(img => !img.path?.toLowerCase?.().includes("/first/"))
+      .map(img => img.url!);
+
+    return [...first, ...others];
   }
-  const patterns = [/1\.|01\.|main|cover|primary|_01\.|1-|stand|front|hero|^a\./i];
-  const score = (img: string) => {
-    const name = img.split('/').pop()?.toLowerCase() || '';
-    if (patterns[0].test(name)) return 0;
-    const num = name.match(/(\d+)\./);
-    return num ? 100 + Number(num[1]) : 1000;
-  };
-  return [...images].sort((a, b) => score(a) - score(b));
+
+  // For slabs, prioritize stand images
+  const urls = valid.map(i => i.url!);
+  const stand = urls.filter(img => img?.toLowerCase?.().includes("stand"));
+  const others = urls.filter(img => !img?.toLowerCase?.().includes("stand"));
+
+  return [...stand, ...others];
 };
 
-export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant, index }) => {
+
+/* ---------------------------------------------
+   PRODUCT CARD COMPONENT
+---------------------------------------------- */
+
+export const ProductCard: React.FC<{
+  product: Product;
+  variant: 'modern' | 'luxury' | 'industrial' | 'elegant';
+  index: number;
+}> = memo(({ product, variant, index }) => {
+
   const { openModal } = usePhoneVerification();
   const { openModal: openSlabModal } = useSlabCustomization();
   const { state } = useCart();
   const { formatPriceFromUSD } = useLocalization();
 
-  // ⭐ Get USD price
+  /* ---- PRICE ---- */
   const priceUSD = useMemo(() => {
-    // Direct price on product
     if (product.priceUSD) return product.priceUSD;
-    
-    // Get from furniture specs
     if (product.category === 'furniture') {
       const specs = getFurnitureSpecs(product.name);
       if (specs?.priceUSD) return specs.priceUSD;
     }
-    
     return 0;
   }, [product]);
 
-  // ⭐ Format display price using localization
   const displayPrice = useMemo(() => {
-    if (priceUSD > 0) {
-      return formatPriceFromUSD(priceUSD);
-    }
+    if (priceUSD > 0) return formatPriceFromUSD(priceUSD);
     return "Get Quote";
   }, [priceUSD, formatPriceFromUSD]);
 
-  // Image handling
+  /* ---- RAW IMAGES ---- */
   const rawImages = useMemo(() => {
     return product.category === "slabs"
       ? [...(product.images || [])]
@@ -96,104 +130,155 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
     [rawImages]
   );
 
+  /* ---- RESOLVED IMAGES (handles slabs vs furniture differently) ---- */
   const [resolvedImages, setResolvedImages] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
-    if (product.category !== "slabs") {
-      setResolvedImages(sortImagesByPriority(uniqueRaw, product.category));
+    
+    if (product.category === "furniture") {
+      // For furniture: normalize and sort by /first/ folder
+      const normalized = uniqueRaw.map((img: any) =>
+        typeof img === "string"
+          ? { url: img, path: img }
+          : { url: img.url, path: img.path || img.url }
+      );
+      setResolvedImages(sortImagesByPriority(normalized, "furniture"));
       return;
     }
+    
+    // For slabs: use getImageUrl to resolve paths
     Promise.all(uniqueRaw.map(p => getImageUrl(p))).then(urls => {
       if (active) {
-        setResolvedImages(sortImagesByPriority(urls.filter(Boolean), product.category));
+        const normalized = urls
+          .filter(Boolean)
+          .map(url => ({ url, path: url }));
+        setResolvedImages(sortImagesByPriority(normalized, "slabs"));
       }
     });
+    
     return () => { active = false; };
   }, [uniqueRaw, product.category]);
 
-  const primaryImage = resolvedImages[0] || "";
+  /* ---- PRIMARY IMAGE ---- */
+  const primaryImage = useMemo(() => {
+    return resolvedImages[0] || "";
+  }, [resolvedImages]);
 
+  /* ---- STATES ---- */
   const [isHovering, setIsHovering] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [videoState, setVideoState] = useState<'checking' | 'available' | 'unavailable'>('checking');
+  const [videoState, setVideoState] = useState<'available' | 'unavailable'>('unavailable');
   const [showVideo, setShowVideo] = useState(false);
+
   const [isNearViewport, setIsNearViewport] = useState(false);
   const [primaryImageLoaded, setPrimaryImageLoaded] = useState(false);
+  const [isInViewport, setIsInViewport] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const intervalRef = useRef<number | null>(null);
-  const videoCheckedRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const isSlab = product.category === 'slabs';
   const isFurniture = product.category === 'furniture';
 
+  /* ---- WINDOW SIZE ---- */
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  /* ---- VIEWPORT LAZY ---- */
   useEffect(() => {
     if (!cardRef.current) return;
     if (index < 12) { setIsNearViewport(true); return; }
-    observerRef.current = new IntersectionObserver(
+
+    const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsNearViewport(true);
-          observerRef.current?.disconnect();
+          obs.disconnect();
         }
       },
       { rootMargin: "800px", threshold: 0.01 }
     );
-    observerRef.current.observe(cardRef.current);
-    return () => observerRef.current?.disconnect();
+
+    obs.observe(cardRef.current);
+    return () => obs.disconnect();
   }, [index]);
 
-  const videoUrl = isFurniture
-    ? getProductVideoUrl(product.name, product.category, (product as any).subcategory || '')
-    : null;
+  /* ---- VIDEO URL ---- */
+  const subcategory = (product as any).subcategory || "";
+  const videoUrl = useMemo(() => {
+    if (!isFurniture) return null;
+    return findVideoUrl(product.name, product.category, subcategory);
+  }, [product]);
 
   useEffect(() => {
-    if (!isFurniture || !videoUrl || !isNearViewport || videoCheckedRef.current) return;
-    videoCheckedRef.current = true;
-    setVideoState('checking');
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.muted = true;
-    const cleanup = () => { video.src = ''; video.load(); };
-    const timeout = setTimeout(() => { setVideoState('unavailable'); cleanup(); }, 2500);
-    video.onloadedmetadata = () => { clearTimeout(timeout); setVideoState('available'); cleanup(); };
-    video.onerror = () => { clearTimeout(timeout); setVideoState('unavailable'); cleanup(); };
-    video.src = videoUrl;
-    return () => { clearTimeout(timeout); cleanup(); };
-  }, [isFurniture, videoUrl, isNearViewport]);
+    setVideoState(videoUrl ? 'available' : 'unavailable');
+  }, [videoUrl]);
 
+  /* ---- MOBILE AUTOPLAY ---- */
   useEffect(() => {
-    if (isFurniture && isHovering && videoState === 'available') setShowVideo(true);
-    else setShowVideo(false);
-  }, [isFurniture, isHovering, videoState]);
+    if (!cardRef.current || !isMobile || !isFurniture || videoState !== 'available') return;
 
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsInViewport(entry.isIntersecting),
+      { threshold: 0.5 }
+    );
+
+    obs.observe(cardRef.current);
+    return () => obs.disconnect();
+  }, [isMobile, isFurniture, videoState]);
+
+  /* ---- SHOW VIDEO ---- */
   useEffect(() => {
-    const shouldSlideshow = isHovering && resolvedImages.length > 1 && (!isFurniture || videoState !== 'available');
-    if (!shouldSlideshow) {
+    if (isFurniture && videoState === 'available') {
+      setShowVideo(isMobile ? isInViewport : isHovering);
+    } else setShowVideo(false);
+  }, [isFurniture, isHovering, videoState, isMobile, isInViewport]);
+
+  /* ---- SLIDESHOW ---- */
+  useEffect(() => {
+    const shouldSlide =
+      isHovering &&
+      resolvedImages.length > 1 &&
+      (isSlab || (isFurniture && videoState === 'unavailable')) &&
+      !(isMobile && showVideo);
+
+    if (!shouldSlide) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (!isHovering) setSlideIndex(0);
       return;
     }
+
     const delay = setTimeout(() => {
       intervalRef.current = window.setInterval(() => {
         setSlideIndex(prev => (prev + 1) % resolvedImages.length);
       }, 1200);
     }, 150);
-    return () => { clearTimeout(delay); if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isHovering, resolvedImages.length, videoState, isSlab]);
 
-  const handleMouseEnter = () => setIsHovering(true);
-  const handleMouseLeave = () => { setIsHovering(false); setShowVideo(false); setSlideIndex(0); };
+    return () => {
+      clearTimeout(delay);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isHovering, resolvedImages, videoState, isSlab, isFurniture, isMobile, showVideo]);
+
+  /* ---- CLICK ---- */
   const handleCardClick = () => sessionStorage.setItem('scrollY', window.scrollY.toString());
 
   const specs = useMemo(() => {
     if (product.category === 'furniture') return getFurnitureSpecs(product.name);
     return null;
-  }, [product.name, product.category]);
+  }, [product]);
 
   const etsyUrl = specs?.etsyUrl || null;
+
+  /* ---------------------------------------------
+     RENDER
+  ---------------------------------------------- */
 
   return (
     <motion.div
@@ -205,8 +290,8 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.15) }}
       viewport={{ once: true, margin: "-30px" }}
       whileHover={{ y: -4 }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => { setIsHovering(false); setShowVideo(false); setSlideIndex(0); }}
     >
       <Link
         to={`/productsinfo/${product.id}`}
@@ -214,10 +299,21 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
         className="relative block overflow-hidden bg-gray-100"
         style={{ aspectRatio: '4/5' }}
       >
+        {/* VIDEO */}
         {showVideo && videoUrl && (
-          <video key={videoUrl} src={videoUrl} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-20" />
+          <video
+            key={videoUrl}
+            src={videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover z-30"
+            style={{ pointerEvents: 'none' }}
+          />
         )}
 
+        {/* MAIN IMAGE */}
         {isNearViewport && primaryImage && (
           <>
             <img
@@ -225,10 +321,15 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
               alt={product.name}
               loading={index < 12 ? "eager" : "lazy"}
               decoding="async"
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${primaryImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                primaryImageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               onLoad={() => setPrimaryImageLoaded(true)}
             />
+
+            {/* SLIDESHOW ON HOVER */}
             {isHovering && primaryImageLoaded && resolvedImages.length > 1 &&
+              (isSlab || (isFurniture && videoState === 'unavailable')) &&
               resolvedImages.map((src, idx) =>
                 idx > 0 && (
                   <img
@@ -237,21 +338,26 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
                     alt={product.name}
                     loading="lazy"
                     decoding="async"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${idx === slideIndex ? "opacity-100" : "opacity-0"}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                      idx === slideIndex ? "opacity-100" : "opacity-0"
+                    }`}
                   />
                 )
               )}
           </>
         )}
 
-        {!isNearViewport && <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />}
+        {!isNearViewport && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
+        )}
+
         {isNearViewport && !primaryImage && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
             <span className="text-gray-500 text-sm">No image</span>
           </div>
         )}
 
-        {/* ⭐ Price badge - using converted price with NO decimals */}
+        {/* PRICE BADGE */}
         {isFurniture && priceUSD > 0 && (
           <div className="absolute top-3 left-3 z-30">
             <span className="inline-block px-3 py-1.5 text-xs md:text-sm font-semibold rounded-full bg-amber-100/95 text-amber-900 border border-amber-300 shadow-sm">
@@ -263,17 +369,17 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
         <div className="absolute inset-0 pointer-events-none ring-1 ring-black/5 rounded-lg" />
       </Link>
 
+      {/* INFO SECTION */}
       <div className="flex flex-col flex-grow p-4 md:p-5">
         <Link to={`/productsinfo/${product.id}`} onClick={handleCardClick}>
-          <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-2 mb-3">{product.name}</h3>
+          <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-2 mb-3">
+            {product.name}
+          </h3>
         </Link>
 
-        {/* ⭐ Fixed button layout with proper flex distribution */}
         <div className="mt-auto pt-2 flex gap-2">
-          {/* Main button - takes more space */}
           <div className="flex-1 min-w-0">
             {product.category === 'slabs' ? (
-              // ⭐ Slabs: Show Request Quote button
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -282,16 +388,11 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
                 }}
                 className="w-full h-11 md:h-12 bg-black text-white border-2 border-black hover:bg-black transition-all rounded-lg font-semibold text-xs md:text-sm whitespace-nowrap flex items-center justify-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 Request Quote
               </button>
             ) : state.items.find(i => i.id === product.id) ? (
-              // ⭐ Furniture: Show quantity handler if in cart
               <QuantityHandler product={product} className="w-full h-11 md:h-12" />
             ) : (
-              // ⭐ Furniture: Show add to cart button
               <AddToCartButton
                 product={product}
                 variant="compact"
@@ -301,7 +402,6 @@ export const ProductCard: React.FC<ProductCardProps> = memo(({ product, variant,
             )}
           </div>
 
-          {/* Icon buttons - fixed width */}
           {etsyUrl && (
             <a 
               href={etsyUrl} 

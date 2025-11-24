@@ -1,4 +1,4 @@
-// products.ts — FIXED (USD ONLY, no conversion here)
+// products.ts — Updated to guarantee "first" folder is always main image
 
 export interface Product {
   id: string;
@@ -7,7 +7,7 @@ export interface Product {
   subcategory: string;
   image: string;
   description: string;
-  priceUSD?: number;        // ⭐ Changed from priceINR to priceUSD
+  priceUSD?: number;
   images?: string[];
   available?: boolean;
 }
@@ -28,6 +28,7 @@ export interface Subcategory {
 import generateSlabCategories from "./slabs.loader";
 import { getFurnitureSpecs } from "./furnitureSpecs";
 
+// ⭐ IMPORTANT CHANGE — store both url AND original path
 const furnitureFiles = import.meta.glob(
   "/src/assets/furnitures/**/*.{webp,jpg,jpeg,png}",
   {
@@ -67,12 +68,10 @@ const SUBCATEGORY_TO_PRODUCT_TYPE: Record<string, string> = {
   sculpture: "Sculpture",
 };
 
-// ⭐ Extract USD pricing from furnitureSpecs
 const getFurniturePriceUSD = (
   productName: string,
   subcategory: string
 ): { priceUSD: number | undefined; available: boolean } => {
-
   const specs = getFurnitureSpecs(productName);
 
   if (!specs?.priceUSD) {
@@ -94,13 +93,23 @@ export const isProductAvailable = (productName: string, subcategory: string) => 
   return getFurniturePriceUSD(productName, subcategory).available;
 };
 
-// Build furniture categories
+// ===========================
+// ⭐ BUILD FURNITURE CATEGORIES
+// ===========================
 const buildFurnitureCategories = (): Subcategory[] => {
-  type Agg = { id: string; name: string; images: string[]; image: string };
+  type Agg = {
+    id: string;
+    name: string;
+    images: { url: string; path: string }[];
+    image: string;
+  };
 
-  const tree = new Map<string, Map<string | null, Map<string, Agg>>>();
+  const tree = new Map<
+    string,
+    Map<string | null, Map<string, Agg>>
+  >();
 
-  // group all furniture images
+  // GROUP IMAGES
   Object.entries(furnitureFiles).forEach(([path, url]) => {
     const parts = path.split("/").filter(Boolean);
     const i = parts.indexOf("furnitures");
@@ -140,24 +149,42 @@ const buildFurnitureCategories = (): Subcategory[] => {
     }
 
     const agg = prodMap.get(product!)!;
-    if (!agg.images.includes(url)) agg.images.push(url);
+
+    // ⭐ Store both path + URL
+    agg.images.push({ url, path });
   });
 
-  // choose main image
+  // CHOOSE MAIN IMAGE — guaranteed "first" folder priority
   tree.forEach((subMap) =>
     subMap.forEach((prodMap) => {
       const arr = [...prodMap.values()];
+
       arr.forEach((p) => {
-        p.image =
-          p.images.find((i) => /1\.|01|main|cover|stand/i.test(i)) ||
-          p.images[0] ||
-          "";
+        // Sort: FIRST folder ALWAYS first
+        p.images.sort((a, b) => {
+          const aFirst = a.path.toLowerCase().includes("/first/");
+          const bFirst = b.path.toLowerCase().includes("/first/");
+          if (aFirst && !bFirst) return -1;
+          if (!aFirst && bFirst) return 1;
+          return 0;
+        });
+
+        // Actual MAIN image
+        const firstImg = p.images.find((img) =>
+          img.path.toLowerCase().includes("/first/")
+        );
+
+        p.image = firstImg
+          ? firstImg.url
+          : p.images[0]?.url || "";
       });
+
       prodMap.clear();
       arr.forEach((p) => prodMap.set(p.name, p));
     })
   );
 
+  // TRANSFORM TO FINAL STRUCTURE
   const result: Subcategory[] = [];
 
   const pushMain = (main: string, children?: string[]) => {
@@ -179,9 +206,9 @@ const buildFurnitureCategories = (): Subcategory[] => {
             category: "furniture",
             subcategory: child,
             image: p.image,
-            images: p.images,
+            images: p.images.map((i) => i.url),
             description: `${p.name} - ${child}`,
-            priceUSD,  // ⭐ Changed from priceINR
+            priceUSD,
             available,
           };
         });
@@ -192,7 +219,6 @@ const buildFurnitureCategories = (): Subcategory[] => {
 
       if (subs.length)
         result.push({ id: toSlug(main), name: main, subcategories: subs });
-
     } else {
       const prodMap = subMap.get(null) || new Map();
 
@@ -205,9 +231,9 @@ const buildFurnitureCategories = (): Subcategory[] => {
           category: "furniture",
           subcategory: main,
           image: p.image,
-          images: p.images,
+          images: p.images.map((i) => i.url),
           description: `${p.name} - ${main}`,
-          priceUSD,  // ⭐ Changed from priceINR
+          priceUSD,
           available,
         };
       });
