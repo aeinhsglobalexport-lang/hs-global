@@ -158,7 +158,7 @@ const furnitureSpecsData: Record<string, FurnitureSpec> = {
     etsyUrl: 'https://www.etsy.com/in-en/listing/4403510340/polished-travertine-coffee-table-with',
   },
 
-  'green marble coffee table furniture': {
+  'hand carved green marble table': {
     product: 'Table',
     type: 'Indoor',
     shape: 'Round',
@@ -1598,9 +1598,9 @@ const furnitureSpecsData: Record<string, FurnitureSpec> = {
   etsyUrl: 'https://www.etsy.com/in-en/listing/4401121984/the-fox-handcrafted-exotic-white-marble',
 },
 
-// Others
+// Lamps
 'aurora marble table lamp': {
-    product: 'Other',
+    product: 'Lamp',
   type: 'Indoor',
   shape: 'Conical',
   material: 'Aurora Marble',

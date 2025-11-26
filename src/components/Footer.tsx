@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   MapPin,
@@ -8,10 +8,38 @@ import {
   Instagram,
   Linkedin,
 } from "lucide-react";
+import { categories as catalogCategories } from "../data/products";
 
 const FooterVariant1: React.FC = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+
+  // Dynamically get subcategories from products data
+  const dynamicCategories = useMemo(() => {
+    const slabsCategory = catalogCategories.find(cat => cat.id === 'slabs');
+    const furnitureCategory = catalogCategories.find(cat => cat.id === 'furniture');
+
+    // Get top-level subcategories for slabs (limit to 5)
+    const slabsSubcategories = slabsCategory?.subcategories
+      ?.slice(0, 5)
+      .map(sub => ({
+        label: sub.name,
+        href: `/products?cat=slabs#${sub.id}`
+      })) || [];
+
+    // Get top-level subcategories for furniture (limit to 5)
+    const furnitureSubcategories = furnitureCategory?.subcategories
+      ?.slice(0, 5)
+      .map(sub => ({
+        label: sub.name,
+        href: `/products?cat=furniture#${sub.id}`
+      })) || [];
+
+    return {
+      slabs: slabsSubcategories,
+      furniture: furnitureSubcategories
+    };
+  }, []);
 
   return (
     <footer className="bg-white text-gray-900 relative overflow-hidden">
@@ -39,63 +67,55 @@ const FooterVariant1: React.FC = () => {
             </p>
           </div>
 
-          {/* Products Section */}
+          {/* Products Section - Dynamic */}
           <div>
             <h4 className="text-lg font-semibold mb-6 text-black">
               {t("footer.products")}
             </h4>
             <div className="space-y-4">
-              {/* Slabs */}
-              <div>
-                <div className="font-semibold text-gray-800 mb-1">Slabs</div>
-                <div className="flex flex-wrap text-sm text-gray-600">
-                  {[
-                    { label: t("footer.marble"), href: "/products?cat=slabs#marble" },
-                    { label: t("footer.granite"), href: "/products?cat=slabs#alaska" },
-                    { label: t("footer.onyx"), href: "/products?cat=slabs#onyx" },
-                    { label: t("footer.sandstone"), href: "/products?cat=slabs#sandstone" },
-                    { label: t("footer.travertine"), href: "/products?cat=slabs#travertine" },
-                  ].map((item, index, arr) => (
-                    <React.Fragment key={item.label}>
-                      <a
-                        href={item.href}
-                        className="hover:text-amber-500 transition-colors duration-200"
-                      >
-                        {item.label}
-                      </a>
-                      {index !== arr.length - 1 && (
-                        <span className="mx-2 text-gray-400">•</span>
-                      )}
-                    </React.Fragment>
-                  ))}
+              {/* Slabs - Dynamic */}
+              {dynamicCategories.slabs.length > 0 && (
+                <div>
+                  <div className="font-semibold text-gray-800 mb-1">Slabs</div>
+                  <div className="flex flex-wrap text-sm text-gray-600">
+                    {dynamicCategories.slabs.map((item, index, arr) => (
+                      <React.Fragment key={item.label}>
+                        <a
+                          href={item.href}
+                          className="hover:text-amber-500 transition-colors duration-200"
+                        >
+                          {item.label}
+                        </a>
+                        {index !== arr.length - 1 && (
+                          <span className="mx-2 text-gray-400">•</span>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Furniture */}
-              <div>
-                <div className="font-semibold text-gray-800 mb-1">Furniture</div>
-                <div className="flex flex-wrap text-sm text-gray-600">
-                  {[
-                    { label:t("footer.tables"), href: "/products?cat=furniture#dining-tables" },
-                    { label: t("footer.chairs"), href: "/products?cat=furniture#dining-chairs" },
-                    { label: t("footer.benches"), href: "/products?cat=furniture#seating-benches" },
-                    { label: t("footer.planters"), href: "/products?cat=furniture#planters" },
-                    { label: t("footer.wash_basins"), href: "/products?cat=furniture#wash-basins" },
-                  ].map((item, index, arr) => (
-                    <React.Fragment key={item.label}>
-                      <a
-                        href={item.href}
-                        className="hover:text-amber-500 transition-colors duration-200"
-                      >
-                        {item.label}
-                      </a>
-                      {index !== arr.length - 1 && (
-                        <span className="mx-2 text-gray-400">•</span>
-                      )}
-                    </React.Fragment>
-                  ))}
+              {/* Furniture - Dynamic */}
+              {dynamicCategories.furniture.length > 0 && (
+                <div>
+                  <div className="font-semibold text-gray-800 mb-1">Furniture</div>
+                  <div className="flex flex-wrap text-sm text-gray-600">
+                    {dynamicCategories.furniture.map((item, index, arr) => (
+                      <React.Fragment key={item.label}>
+                        <a
+                          href={item.href}
+                          className="hover:text-amber-500 transition-colors duration-200"
+                        >
+                          {item.label}
+                        </a>
+                        {index !== arr.length - 1 && (
+                          <span className="mx-2 text-gray-400">•</span>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

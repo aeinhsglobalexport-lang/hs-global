@@ -19,7 +19,7 @@ const TrustBadges: React.FC = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-8 h-8"
+          className="w-6 h-6 md:w-8 md:h-8"
         >
           <path
             strokeLinecap="round"
@@ -38,7 +38,7 @@ const TrustBadges: React.FC = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-8 h-8"
+          className="w-6 h-6 md:w-8 md:h-8"
         >
           <path
             strokeLinecap="round"
@@ -57,7 +57,7 @@ const TrustBadges: React.FC = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-8 h-8"
+          className="w-6 h-6 md:w-8 md:h-8"
         >
           <path
             strokeLinecap="round"
@@ -76,7 +76,7 @@ const TrustBadges: React.FC = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-8 h-8"
+          className="w-6 h-6 md:w-8 md:h-8"
         >
           <path
             strokeLinecap="round"
@@ -101,7 +101,7 @@ const TrustBadges: React.FC = () => {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-8 h-8"
+          className="w-6 h-6 md:w-8 md:h-8"
         >
           <path
             strokeLinecap="round"
@@ -115,14 +115,13 @@ const TrustBadges: React.FC = () => {
   ];
 
   return (
-    <section className="relative py-10 md:py-12 overflow-hidden">
+    <section className="relative py-10 md:py-12 overflow-hidden min-h-[300px] sm:min-h-[250px]">
       {/* Fixed Background Image with 2:9 aspect ratio */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url('/service.webp')`,
           backgroundAttachment: "fixed",
-          aspectRatio: "9/2",
         }}
       >
         <div className="absolute inset-0 bg-black/40" />
@@ -130,16 +129,16 @@ const TrustBadges: React.FC = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8 items-start">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 lg:gap-8 items-start justify-items-center">
           {badges.map((badge) => (
             <div
               key={badge.title}
-              className="flex flex-col items-center text-center"
+              className="flex flex-col items-center text-center w-full"
             >
-              <div className="w-12 h-12 flex items-center justify-center rounded-full border border-white/30 text-white bg-white/10 backdrop-blur-sm">
+              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full border border-white/30 text-white bg-white/10 backdrop-blur-sm">
                 {badge.icon}
               </div>
-              <p className="mt-3 text-sm md:text-base font-medium text-white">
+              <p className="mt-3 text-xs md:text-sm lg:text-base font-medium text-white leading-tight">
                 {badge.title}
               </p>
             </div>

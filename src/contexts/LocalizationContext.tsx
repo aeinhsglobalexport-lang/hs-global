@@ -4,7 +4,8 @@ import i18n from "../i18n";
 // ⭐ CORE PRINCIPLE: Everything stored in USD, convert at display time
 const USD_TO_INR_RATE = 89.5; // Update this periodically
 
-const EXCHANGE_API_URL = "https://api.currencyapi.com/v3/latest?apikey=cur_live_CBTw7osGZWPzVoVTpZqBWhgPlk6T3atERepC7QDF&base_currency=USD";
+// const EXCHANGE_API_URL = "https://api.currencyapi.com/v3/latest?apikey=cur_live_CBTw7osGZWPzVoVTpZqBWhgPlk6T3atERepC7QDF&base_currency=USD";
+const EXCHANGE_API_URL = "https://api.currencyapi.com/v3/latest?apikey=cur_live_vnpO5HQa0aKLlg9rw572VyeoS1IVxttQfwPcpajq&base_currency=USD";
 
 interface ExchangeRates {
   [key: string]: number;
@@ -123,9 +124,7 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
           normalized[code] = info.value;
         });
         setExchangeRates(normalized);
-        console.log("[Currency] Rates updated");
       } catch (error) {
-        console.error("[Currency] Failed to fetch rates:", error);
         setExchangeRates({
           USD: 1, INR: USD_TO_INR_RATE, EUR: 0.92, GBP: 0.79, AED: 3.67,
           SAR: 3.75, AUD: 1.52, CAD: 1.36, SGD: 1.34, JPY: 149.5,
@@ -159,9 +158,9 @@ export const LocalizationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
         setCurrencyState(detectedCurrency);
         setLanguageState(detectedLanguage);
-        console.log("[Location] Detected:", data.country_name, "→", detectedLanguage, detectedCurrency);
+        
       } catch (error) {
-        console.error("[Location] Detection failed:", error);
+        
       } finally {
         setLoading(false);
       }

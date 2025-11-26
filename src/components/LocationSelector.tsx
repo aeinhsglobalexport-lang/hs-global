@@ -159,7 +159,7 @@ export const LocationSelector: React.FC = () => {
 
   if (loading) {
     return (
-      <button className="p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md border border-gray-200 hover:shadow-lg transition-all">
+      <button className="fixed md:relative bottom-4 left-4 md:bottom-auto md:left-auto p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md border border-gray-200 hover:shadow-lg transition-all z-40">
         <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
       </button>
     );
@@ -182,11 +182,14 @@ export const LocationSelector: React.FC = () => {
   }));
 
   return (
-    <div className="relative" ref={popupRef}>
+    <div 
+      className="fixed md:relative bottom-4 left-4 md:bottom-auto md:left-auto md:top-auto md:right-auto z-40"
+      ref={popupRef}
+    >
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md border border-gray-200 hover:shadow-lg transition-all hover:scale-105"
+        className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg md:shadow-md border border-gray-200 hover:shadow-xl transition-all hover:scale-105 active:scale-95"
         title="Change language and currency"
       >
         <Globe className="w-4 h-4 text-gray-700" />
@@ -198,12 +201,12 @@ export const LocationSelector: React.FC = () => {
 
       {/* Floating Popup */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+        <div className="fixed md:absolute left-0 bottom-16 md:bottom-auto md:left-auto md:top-full md:right-0 mb-2 md:mb-0 md:mt-2 w-[calc(100vw-2rem)] md:w-80 max-w-sm bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-in slide-in-from-bottom-4 md:slide-in-from-top-2 duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-black to-gray-800 text-white p-4 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-black to-gray-800 text-white p-3 md:p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              <h3 className="font-semibold">Preferences</h3>
+              <Globe className="w-4 h-4 md:w-5 md:h-5" />
+              <h3 className="font-semibold text-sm md:text-base">Preferences</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
@@ -214,10 +217,10 @@ export const LocationSelector: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="p-4 space-y-4">
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4 max-h-[70vh] md:max-h-[80vh] overflow-y-auto">
             {/* Location Info */}
             {location && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-200">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-2.5 md:p-3 border border-blue-200">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -235,7 +238,7 @@ export const LocationSelector: React.FC = () => {
             )}
 
             {/* Auto-detect Toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center justify-between p-2.5 md:p-3 bg-gray-50 rounded-xl">
               <div>
                 <p className="text-sm font-semibold text-gray-900">Auto-Detect</p>
                 <p className="text-xs text-gray-600">Set based on location</p>

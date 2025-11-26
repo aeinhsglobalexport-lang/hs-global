@@ -1,5 +1,6 @@
 // ProductCard.tsx - Request Quote for Slabs, Add to Cart for Furniture
 // Fixed version - Handles both furniture and slabs images correctly
+// Fixed video matching for similar product names - ALL WORDS MUST MATCH
 
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import { motion } from 'framer-motion';
@@ -36,25 +37,80 @@ const findVideoUrl = (productName: string, category: string, subcategory: string
   const normalizedProduct = normalizeName(productName).toLowerCase();
   const normalizedSub = normalizeName(subcategory).toLowerCase();
   
-  for (const [path, url] of Object.entries(videoFiles)) {
-    const lowerPath = path.toLowerCase();
-    if (lowerPath.includes(normalizedProduct) && lowerPath.includes(normalizedSub)) {
-      return url;
-    }
-  }
-  
-  // fallback cleaning
+  // Clean product name for exact matching (remove spaces and special chars)
   const cleanProduct = normalizedProduct.replace(/[^a-z0-9]/g, '');
   const cleanSub = normalizedSub.replace(/[^a-z0-9]/g, '');
   
+  // FIRST PASS: Try to find EXACT match
   for (const [path, url] of Object.entries(videoFiles)) {
     const cleanPath = path.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (cleanPath.includes(cleanProduct) && cleanPath.includes(cleanSub)) {
+    
+    // Check if path contains exact product name followed by subcategory or vice versa
+    // This ensures "whitemarblesidetable" matches exactly, not "banswarawhitemarblesidetable"
+    if (cleanPath.includes(cleanProduct + cleanSub) || 
+        cleanPath.includes(cleanSub + cleanProduct)) {
       return url;
     }
   }
   
-  return null;
+  // SECOND PASS: Try filename exact match
+  for (const [path, url] of Object.entries(videoFiles)) {
+    const fileName = path.split('/').pop()?.toLowerCase().replace(/\.mp4$/, '') || '';
+    const cleanFileName = fileName.replace(/[^a-z0-9]/g, '');
+    
+    if (cleanFileName === cleanProduct + cleanSub || 
+        cleanFileName === cleanSub + cleanProduct ||
+        cleanFileName === cleanProduct) {
+      return url;
+    }
+  }
+  
+  // THIRD PASS: ALL words must match (strict matching)
+  const productWords = normalizedProduct.split(/\s+/).filter(w => w.length > 2);
+  let bestMatch: { path: string; url: string; score: number; wordCount: number } | null = null;
+  
+  for (const [path, url] of Object.entries(videoFiles)) {
+    const lowerPath = path.toLowerCase();
+    
+    // Must include subcategory
+    if (!lowerPath.includes(normalizedSub)) continue;
+    
+    // Count matching words and track which ones
+    let matchScore = 0;
+    let matchedWords = 0;
+    const pathWords = lowerPath.split(/[^a-z0-9]+/).filter(Boolean);
+    
+    // Check if ALL product words are in path
+    for (const word of productWords) {
+      if (pathWords.includes(word)) {
+        matchedWords++;
+        matchScore += word.length;
+      }
+    }
+    
+    // CRITICAL: ALL words must match, not just some
+    // This ensures "Black Rectangular Block" won't match "Forest Green Rectangular Block"
+    if (matchedWords !== productWords.length) continue;
+    
+    // Penalize if path has significantly MORE words (likely not exact match)
+    const pathWordCount = pathWords.length;
+    const productWordCount = productWords.length;
+    
+    // If path has extra words, it's likely a more specific variant
+    if (pathWordCount > productWordCount + 2) {
+      matchScore *= 0.5; // Heavy penalty
+    }
+    
+    const matchPercentage = matchedWords / productWords.length;
+    matchScore *= matchPercentage;
+    
+    if (!bestMatch || matchScore > bestMatch.score || 
+        (matchScore === bestMatch.score && pathWordCount < bestMatch.wordCount)) {
+      bestMatch = { path, url, score: matchScore, wordCount: pathWordCount };
+    }
+  }
+  
+  return bestMatch ? bestMatch.url : null;
 };
 
 /* ---- IMAGE SORTING FOR FURNITURE ---- */

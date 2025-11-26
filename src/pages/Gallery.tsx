@@ -166,7 +166,7 @@ const Gallery = memo(() => {
         <div 
           className="fixed-bg absolute inset-0"
           style={{
-            backgroundImage: "url('/gallery-hero.jpg')"
+            backgroundImage: "url('/gallery-hero.webp')"
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
